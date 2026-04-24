@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
-import { AppService } from './app.service';
 import { BotModule } from './bot/bot.module';
-import { AppController } from './app.controller';
 import { DatabaseModule } from './database.module';
+import 'dotenv/config';
 
 @Module({
   imports: [BotModule, DatabaseModule],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
