@@ -17,12 +17,18 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "drizzle:generate": "drizzle-kit generate --config drizzle.config.ts",
+    "migrate:dev": "drizzle-kit migrate dev --config drizzle.config.ts",
+    "migrate:push": "drizzle-kit migrate deploy --config drizzle.config.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
+    "amqplib": "^1.0.3",
+    "baileys": "^7.0.0-rc.9",
+    "qrcode-terminal": "^0.12.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },
@@ -35,7 +41,9 @@
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.0.0",
+    "@types/pg": "^8.20.0",
     "@types/supertest": "^7.0.0",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
