@@ -22,7 +22,6 @@ done
 echo
 echo "Postgres disponível — preparando ambiente..."
 
-# instala dependências se necessário
 if [ ! -d "node_modules" ] || [ -z "$(ls -A node_modules 2>/dev/null || true)" ]; then
   echo "Instalando dependências (yarn)..."
   corepack enable || true
