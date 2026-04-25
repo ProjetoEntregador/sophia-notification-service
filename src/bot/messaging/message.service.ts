@@ -17,7 +17,7 @@ export class MessageService extends MessageSender {
     await this.sock.sendMessage(jid, { text });
   }
 
-  async sendTyping(jid: string, minMs = 1500, maxMs = 3000): Promise<void> {
+  async typingMessage(jid: string, minMs = 1500, maxMs = 3000): Promise<void> {
     await this.sock.sendPresenceUpdate('composing', jid);
     await delay(minMs, maxMs);
     await this.sock.sendPresenceUpdate('paused', jid);
