@@ -18,9 +18,11 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
+    "db:create": "ts-node -r dotenv/config ./scripts/create-db.ts",
     "drizzle:generate": "drizzle-kit generate --config drizzle.config.ts",
-    "migrate:dev": "drizzle-kit migrate dev --config drizzle.config.ts",
-    "migrate:push": "drizzle-kit migrate deploy --config drizzle.config.ts"
+    "migrate": "drizzle-kit migrate --config drizzle.config.ts",
+    "db:create:docker": "docker compose exec sophia_notification_service yarn db:create",
+    "migrate:docker": "docker compose exec sophia_notification_service yarn migrate"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
