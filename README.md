@@ -1,98 +1,246 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Sophia Notification Service
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Serviço de notificações via WhatsApp (Baileys) construído em NestJS, com PostgreSQL gerenciado por Drizzle ORM. Toda a stack roda em Docker — Postgres, Redis e a aplicação Nest.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Stack
 
-## Description
+- **NestJS 11** (Node 20)
+- **Drizzle ORM** + **PostgreSQL 16**
+- **Baileys** (WhatsApp)
+- **Redis** (placeholder de fila)
+- **Docker Compose** (orquestração)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+---
 
-## Project setup
+## Como rodar
+
+### Pré-requisitos
+
+- Docker e Docker Compose
+- Node 20 + Yarn 1.x (apenas para gerar migrations no host; a aplicação roda no container)
+
+### Subindo a stack
+
+1. Copie o `.env.example` (se existir) ou use o `.env` atual. As variáveis essenciais:
+
+   ```env
+   PORT=3000                # porta INTERNA do container; não mude
+   DB_NAME=sophia_db
+   DB_USER=postgres
+   DB_PASSWORD=your-db-password
+   DB_HOST=postgres         # nome do serviço no compose
+   DB_PORT=5432             # porta INTERNA do container do Postgres
+   DATABASE_URL=postgres://postgres:your-db-password@postgres:5432/sophia_db
+   ```
+
+   Mapeamentos externos no `docker-compose.yml`:
+   - App: `localhost:3001 → container:3000`
+   - Postgres: `localhost:5433 → container:5432`
+   - Redis: `localhost:6380 → container:6379`
+
+2. Build e subida:
+
+   ```bash
+   docker compose build sophia_notification_service
+   docker compose up -d
+   ```
+
+3. Acompanhe os logs (filtra os QR codes do WhatsApp):
+
+   ```bash
+   docker compose logs -f sophia_notification_service | grep -v "█\|▄\|▀"
+   ```
+
+   Aguarde a linha `Nest application successfully started on port 3000`.
+
+### Migrations
+
+O fluxo é dividido entre host e container:
+
+| Operação                             | Onde rodar                           | Comando                 |
+| ------------------------------------ | ------------------------------------ | ----------------------- |
+| Editar schema (`src/db/schema/*.ts`) | host                                 | —                       |
+| Gerar SQL a partir do schema         | host                                 | `yarn drizzle:generate` |
+| Aplicar SQL no banco                 | container                            | `yarn migrate:docker`   |
+| Criar o banco caso não exista        | container (automático no entrypoint) | `yarn db:create:docker` |
+
+Para gerar SQL no host, exporte um `DATABASE_URL` com `localhost:5433`:
 
 ```bash
-$ yarn install
+DATABASE_URL=postgres://postgres:123456789@localhost:5433/sophia_db yarn drizzle:generate
+git add drizzle/
+docker compose build sophia_notification_service && docker compose up -d
 ```
 
-## Compile and run the project
+> O `entrypoint.sh` do container já roda `yarn db:create` e `yarn migrate` antes de iniciar a app.
+
+### Testando endpoints
+
+A app responde em `http://localhost:3001`. Os endpoints atuais:
+
+```http
+GET  /bot/status
+GET  /treatments
+POST /treatments
+GET  /treatments/:id
+PATCH /treatments/:id
+DELETE /treatments/:id
+
+GET  /reminders
+POST /reminders
+GET  /reminders/:id
+PATCH /reminders/:id
+DELETE /reminders/:id
+```
+
+Use o arquivo `src/http.http` (extensão REST Client do VS Code), Insomnia, Postman ou `curl`.
+
+### Conectando ao Postgres a partir do host
 
 ```bash
-# development
-$ yarn run start
-
-# watch mode
-$ yarn run start:dev
-
-# production mode
-$ yarn run start:prod
+docker compose exec postgres psql -U postgres -d sophia_db
+# ou via cliente externo:
+psql postgres://postgres:123456789@localhost:5433/sophia_db
 ```
 
-## Run tests
+---
+
+## Como adicionar novos serviços/endpoints
+
+A arquitetura segue SOLID. Use cada princípio como guia ao criar um novo módulo.
+
+### Estrutura de um módulo
+
+Novos domínios vão em `src/modules/<dominio>/`:
+
+```
+src/modules/<dominio>/
+  <dominio>.module.ts        # registra controller + provider(s)
+  <dominio>.controller.ts    # entrada HTTP (somente delegação)
+  <dominio>.service.ts       # regras de negócio + acesso a dados
+```
+
+Lembre de adicionar o módulo a `src/app.module.ts`.
+
+### Aplicando SOLID
+
+#### **S — Single Responsibility**
+
+Cada classe tem **uma** razão para mudar.
+
+- **Controller**: apenas mapeia HTTP ↔ chamadas de service. Sem lógica de negócio, sem acesso a banco, sem `try/catch` de domínio.
+- **Service**: regras de negócio e queries.
+- **Schema** (`src/db/schema/`): forma das tabelas; nada além disso.
+- Se precisar enviar mensagens, use o `MessageSender` do `BotModule`. Não chame Baileys direto de um service de domínio.
+
+> 🚫 Anti-padrão: um controller que valida regra, monta entidade e chama o repositório. Mova para o service.
+
+#### **O — Open/Closed**
+
+Aberto a extensão, fechado a modificação.
+
+- Para reagir a um novo evento (ex.: enviar SMS além de WhatsApp), implemente um novo `MessageHandler` e registre-o como provider — sem editar o que já existe. Veja `LogMessageHandler` em `src/bot/messaging/log-message.handler.ts`.
+- Para acrescentar um novo presenter de QR code, basta uma nova classe que implementa `QrCodePresenter` e trocar o `useClass` no `BotModule`.
+
+#### **L — Liskov Substitution**
+
+Toda implementação de uma interface deve ser intercambiável.
+
+- Use as classes abstratas em `src/bot/interfaces/` (`MessageSender`, `SocketProvider`, `QrCodePresenter`, `MessageHandler`) como contratos. Não dependa de `MessageService` direto — dependa de `MessageSender`.
+- Se um teste for trocar `MessageSender` por um mock, isso tem que funcionar sem alterar o consumidor.
+
+#### **I — Interface Segregation**
+
+Interfaces pequenas e focadas.
+
+- Já fazemos isso ao separar `MessageSender` (envio) de `MessageHandler` (recepção) e `QrCodePresenter` (apresentação). Ao criar uma nova abstração, prefira várias interfaces pequenas a uma "Service" gigante.
+
+#### **D — Dependency Inversion**
+
+Módulos de alto nível dependem de abstrações.
+
+- Injete via construtor, sempre tipado pela classe abstrata, não pela implementação concreta:
+
+  ```ts
+  constructor(private readonly messageSender: MessageSender) {}
+  ```
+
+- Para acessar o banco, injete o token `DRIZZLE` (em `src/database.module.ts`), não importe o pool diretamente:
+
+  ```ts
+  constructor(@Inject(DRIZZLE) private readonly db: NodePgDatabase) {}
+  ```
+
+### Receita: novo CRUD em 5 passos
+
+1. **Schema** em `src/db/schema/<entidade>.ts`. Exporte o tipo em `src/db/schema/types.ts`.
+2. **Migration**: `yarn drizzle:generate` no host. Commite os SQLs em `drizzle/`.
+3. **Service** em `src/modules/<dominio>/<dominio>.service.ts`:
+   - Injete `DRIZZLE`.
+   - Use um `private toValues()` para mapear input → linha do banco (converte datas, omite `undefined`). Veja `treatments.service.ts` como referência.
+   - Lance `NotFoundException` para id inexistente.
+4. **Controller** em `<dominio>.controller.ts`:
+   - Use `ParseUUIDPipe` para `:id`.
+   - Apenas delegue para o service. DTOs como `type` no topo do arquivo (ou em `dto/` se crescerem).
+5. **Module**: registre controller + service e importe em `AppModule`.
+
+### Como rebuildar após mudanças
+
+A imagem é multi-stage e inclui o `dist/` no estágio final. Toda mudança em `src/` exige rebuild:
 
 ```bash
-# unit tests
-$ yarn run test
-
-# e2e tests
-$ yarn run test:e2e
-
-# test coverage
-$ yarn run test:cov
+docker compose build sophia_notification_service && docker compose up -d
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Se mudou só `package.json`/scripts e a app não pegou:
 
 ```bash
-$ yarn install -g @nestjs/mau
-$ mau deploy
+docker compose build --no-cache sophia_notification_service && docker compose up -d
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+---
 
-## Resources
+## Estrutura de pastas
 
-Check out a few resources that may come in handy when working with NestJS:
+```
+.
+├── compose/nest/          # Dockerfile + entrypoint da app
+├── docker-compose.yml
+├── drizzle/               # SQL gerado pelo drizzle-kit
+├── drizzle.config.ts
+├── scripts/
+│   └── create-db.ts       # cria o banco se não existir (rodado pelo entrypoint)
+└── src/
+    ├── app.module.ts
+    ├── main.ts
+    ├── database.module.ts # provider DRIZZLE (Pool pg + drizzle())
+    ├── db/
+    │   ├── schema/        # definições das tabelas
+    │   └── relations.ts
+    ├── bot/               # módulo WhatsApp (Baileys)
+    │   ├── connection/
+    │   ├── interfaces/    # MessageSender, MessageHandler, ...
+    │   ├── messaging/
+    │   └── presenters/
+    └── modules/
+        ├── reminders/
+        └── treatments/
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+---
 
-## Support
+## Comandos úteis
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```bash
+# entrar no shell do container da app
+docker compose exec sophia_notification_service sh
 
-## Stay in touch
+# ver tabelas no banco
+docker compose exec postgres psql -U postgres -d sophia_db -c "\dt"
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+# ver migrations já aplicadas
+docker compose exec postgres psql -U postgres -d sophia_db -c "SELECT * FROM drizzle.__drizzle_migrations;"
 
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+# resetar tudo (apaga volume do banco!)
+docker compose down -v
+```
