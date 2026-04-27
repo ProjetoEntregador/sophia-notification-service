@@ -7,6 +7,7 @@ import { NewTreatment, Treatment } from '../../db/schema/types';
 
 type CreateTreatmentInput = {
   userId: string;
+  jid: string;
   medicineName: string;
   intervalHours: number;
   startTime: string;
@@ -65,6 +66,7 @@ export class TreatmentsService {
   ): Partial<NewTreatment> {
     return {
       userId: input.userId,
+      jid: input.jid,
       medicineName: input.medicineName,
       intervalHours: input.intervalHours,
       startTime: input.startTime ? new Date(input.startTime) : undefined,

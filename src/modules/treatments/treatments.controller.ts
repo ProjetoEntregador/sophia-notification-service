@@ -13,6 +13,7 @@ import { TreatmentsService } from './treatments.service';
 
 type CreateTreatmentDto = {
   userId: string;
+  jid: string;
   medicineName: string;
   intervalHours: number;
   startTime: string;
