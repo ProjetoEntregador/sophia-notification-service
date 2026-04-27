@@ -3,6 +3,7 @@ import { RemindersService } from './reminders.service';
 import { RemindersController } from './reminders.controller';
 
 @Module({
+  exports: [RemindersService],
   controllers: [RemindersController],
   providers: [RemindersService],
 })
