@@ -6,34 +6,18 @@ import {
 import { TreatmentsService } from '../../../modules/treatments/treatments.service.js';
 import { ConversationStateService } from '../state/conversation-state.service.js';
 import {
-  formatBrDate,
+  buildTreatmentSummary,
   jidToUserId,
   parseBrDate,
 } from '../../../utils/functions.js';
+import { TreatmentDraft, TreatmentStep } from '../../../@types';
 
 const FLOW = 'start_treatment';
 const TRIGGERS = ['cadastrar', 'novo tratamento', 'cadastrar tratamento'];
 const WELCOME =
   'Vamos cadastrar um novo tratamento. 💊\n(envie "cancelar" a qualquer momento)';
 
-type TreatmentDraft = Partial<{
-  medicineName: string;
-  intervalHours: number;
-  startTime: string;
-  endTime: string;
-}>;
-
-type StepResult =
-  | { kind: 'reject'; reply: string }
-  | { kind: 'advance'; patch: TreatmentDraft }
-  | { kind: 'commit' };
-
-type Step = {
-  prompt: (draft: TreatmentDraft) => string;
-  process: (input: string, draft: TreatmentDraft) => StepResult;
-};
-
-const STEPS: ReadonlyArray<Step> = [
+const STEPS: ReadonlyArray<TreatmentStep> = [
   {
     prompt: () => 'Qual o nome do remédio?',
     process: (input) =>
@@ -88,7 +72,7 @@ const STEPS: ReadonlyArray<Step> = [
     },
   },
   {
-    prompt: (draft) => buildSummary(draft),
+    prompt: (draft) => buildTreatmentSummary(draft),
     process: (input) => {
       const lower = input.toLowerCase();
       if (lower === 'sim' || lower === 's') return { kind: 'commit' };
@@ -168,17 +152,4 @@ export class StartTreatmentHandler implements MessageHandlerInterface {
       endTime: draft.endTime as string,
     });
   }
-}
-
-function buildSummary(draft: TreatmentDraft): string {
-  const start = new Date(draft.startTime as string);
-  const end = new Date(draft.endTime as string);
-  return [
-    'Confirma os dados?',
-    `💊 ${draft.medicineName as string}`,
-    `⏱ De ${draft.intervalHours as number} em ${draft.intervalHours as number} horas`,
-    `📅 ${formatBrDate(start)} → ${formatBrDate(end)}`,
-    '',
-    'Responda *SIM* para confirmar ou *CANCELAR*.',
-  ].join('\n');
 }

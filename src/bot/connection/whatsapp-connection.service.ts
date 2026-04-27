@@ -7,11 +7,6 @@ import makeWASocket, {
 import pino from 'pino';
 import { SocketProvider } from '../interfaces/index.js';
 
-export interface WhatsAppConnectionOptions {
-  authFolder?: string;
-  connectTimeoutMs?: number;
-}
-
 @Injectable()
 export class WhatsAppConnectionService extends SocketProvider {
   private readonly logger = new Logger(WhatsAppConnectionService.name);

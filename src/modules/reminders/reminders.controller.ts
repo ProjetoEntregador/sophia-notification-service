@@ -10,17 +10,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { RemindersService } from './reminders.service';
-
-type CreateReminderDto = {
-  treatmentId: string;
-  scheduledTime: string;
-  sent?: boolean;
-  sentAt?: string | null;
-  confirmed?: boolean | null;
-  confirmedAt?: string | null;
-};
-
-type UpdateReminderDto = Partial<CreateReminderDto>;
+import { CreateReminderDto, UpdateReminderDto } from '../../@types';
 
 @Controller('reminders')
 export class RemindersController {

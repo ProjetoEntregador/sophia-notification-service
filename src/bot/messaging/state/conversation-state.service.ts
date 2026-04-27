@@ -1,10 +1,5 @@
 import { Injectable } from '@nestjs/common';
-
-export type ConversationState = {
-  flow: string;
-  step: string | number;
-  data: Record<string, unknown>;
-};
+import { ConversationState } from '../../../@types';
 
 // TODO: persistir em Postgres/Redis quando o bot rodar com múltiplas instâncias.
 @Injectable()

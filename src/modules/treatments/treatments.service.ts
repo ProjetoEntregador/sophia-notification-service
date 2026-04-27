@@ -3,18 +3,12 @@ import { eq } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DRIZZLE } from '../../database.module';
 import { treatments } from '../../db/schema/treatments';
-import { NewTreatment, Treatment } from '../../db/schema/types';
-
-type CreateTreatmentInput = {
-  userId: string;
-  jid: string;
-  medicineName: string;
-  intervalHours: number;
-  startTime: string;
-  endTime: string;
-};
-
-type UpdateTreatmentInput = Partial<CreateTreatmentInput>;
+import {
+  CreateTreatmentInput,
+  NewTreatment,
+  Treatment,
+  UpdateTreatmentInput,
+} from '../../@types';
 
 @Injectable()
 export class TreatmentsService {

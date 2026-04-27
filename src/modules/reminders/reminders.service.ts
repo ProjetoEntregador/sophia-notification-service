@@ -3,24 +3,13 @@ import { and, asc, eq, isNull } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DRIZZLE } from '../../database.module';
 import { reminders } from '../../db/schema/reminders';
-import { NewReminder, Reminder } from '../../db/schema/types';
-
-type CreateReminderInput = {
-  treatmentId: string;
-  scheduledTime: string;
-  sent?: boolean;
-  sentAt?: string | null;
-  confirmed?: boolean | null;
-  confirmedAt?: string | null;
-};
-
-type UpdateReminderInput = Partial<CreateReminderInput>;
-
-const toDate = (value: string | null | undefined): Date | null | undefined => {
-  if (value === undefined) return undefined;
-  if (value === null) return null;
-  return new Date(value);
-};
+import {
+  CreateReminderInput,
+  NewReminder,
+  Reminder,
+  UpdateReminderInput,
+} from '../../@types';
+import { toDate } from '../../utils/functions';
 
 @Injectable()
 export class RemindersService {
