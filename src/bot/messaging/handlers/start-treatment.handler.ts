@@ -5,84 +5,19 @@ import {
 } from '../../interfaces/index.js';
 import { TreatmentsService } from '../../../modules/treatments/treatments.service.js';
 import { ConversationStateService } from '../state/conversation-state.service.js';
+import { jidToUserId } from '../../../utils/functions.js';
 import {
-  buildTreatmentSummary,
-  jidToUserId,
-  parseBrDate,
-} from '../../../utils/functions.js';
-import { TreatmentDraft, TreatmentStep } from '../../../@types';
-
-const FLOW = 'start_treatment';
-const TRIGGERS = ['cadastrar', 'novo tratamento', 'cadastrar tratamento'];
-const WELCOME =
-  'Vamos cadastrar um novo tratamento. 💊\n(envie "cancelar" a qualquer momento)';
-
-const STEPS: ReadonlyArray<TreatmentStep> = [
-  {
-    prompt: () => 'Qual o nome do remédio?',
-    process: (input) =>
-      input.length === 0
-        ? { kind: 'reject', reply: 'Por favor, digite o nome do remédio.' }
-        : { kind: 'advance', patch: { medicineName: input } },
-  },
-  {
-    prompt: () => 'De quantas em quantas horas? (ex: 8)',
-    process: (input) => {
-      const hours = Number(input);
-      if (!Number.isInteger(hours) || hours <= 0 || hours > 24) {
-        return {
-          kind: 'reject',
-          reply: 'Número inválido. Digite um inteiro entre 1 e 24.',
-        };
-      }
-      return { kind: 'advance', patch: { intervalHours: hours } };
-    },
-  },
-  {
-    prompt: () => 'Quando começa? (formato: DD/MM/AAAA HH:mm)',
-    process: (input) => {
-      const date = parseBrDate(input);
-      if (!date) {
-        return {
-          kind: 'reject',
-          reply: 'Data inválida. Use o formato DD/MM/AAAA HH:mm.',
-        };
-      }
-      return { kind: 'advance', patch: { startTime: date.toISOString() } };
-    },
-  },
-  {
-    prompt: () => 'E quando termina?',
-    process: (input, draft) => {
-      const date = parseBrDate(input);
-      if (!date) {
-        return {
-          kind: 'reject',
-          reply: 'Data inválida. Use o formato DD/MM/AAAA HH:mm.',
-        };
-      }
-      const start = new Date(draft.startTime as string);
-      if (date <= start) {
-        return {
-          kind: 'reject',
-          reply: 'A data de término precisa ser depois do início.',
-        };
-      }
-      return { kind: 'advance', patch: { endTime: date.toISOString() } };
-    },
-  },
-  {
-    prompt: (draft) => buildTreatmentSummary(draft),
-    process: (input) => {
-      const lower = input.toLowerCase();
-      if (lower === 'sim' || lower === 's') return { kind: 'commit' };
-      return {
-        kind: 'reject',
-        reply: 'Responda *SIM* para confirmar ou *CANCELAR* para descartar.',
-      };
-    },
-  },
-];
+  ConversationState,
+  TreatmentDraft,
+  TreatmentStepResult,
+} from '../../../@types';
+import {
+  CANCEL_KEYWORD,
+  FLOW,
+  MESSAGES,
+  STEPS,
+  TRIGGERS,
+} from '../constansts/start-treatment.constants.js';
 
 @Injectable()
 export class StartTreatmentHandler implements MessageHandlerInterface {
@@ -101,45 +36,79 @@ export class StartTreatmentHandler implements MessageHandlerInterface {
   async handle(jid: string, text: string): Promise<void> {
     const input = text.trim();
 
-    if (input.toLowerCase() === 'cancelar') {
-      this.state.clear(jid);
-      await this.sender.typingMessage(jid);
-      await this.sender.sendText(jid, 'Cadastro cancelado.');
-      return;
+    if (this.isCancel(input)) {
+      return this.cancelFlow(jid);
     }
 
     const current = this.state.get(jid);
-
-    if (!current || current.flow !== FLOW) {
-      this.state.set(jid, { flow: FLOW, step: 0, data: {} });
-      await this.sender.typingMessage(jid);
-      await this.sender.sendText(jid, `${WELCOME}\n\n${STEPS[0].prompt({})}`);
-      return;
+    if (!this.isInFlow(current)) {
+      return this.startFlow(jid);
     }
 
+    return this.advanceFlow(jid, input, current);
+  }
+
+  private isCancel(input: string): boolean {
+    return input.toLowerCase() === CANCEL_KEYWORD;
+  }
+
+  private isInFlow(
+    state: ConversationState | undefined,
+  ): state is ConversationState {
+    return !!state && state.flow === FLOW;
+  }
+
+  private async cancelFlow(jid: string): Promise<void> {
+    this.state.clear(jid);
+    await this.reply(jid, MESSAGES.cancelled);
+  }
+
+  private async startFlow(jid: string): Promise<void> {
+    this.state.set(jid, { flow: FLOW, step: 0, data: {} });
+    await this.reply(jid, `${MESSAGES.welcome}\n\n${STEPS[0].prompt({})}`);
+  }
+
+  private async advanceFlow(
+    jid: string,
+    input: string,
+    current: ConversationState,
+  ): Promise<void> {
     const stepIndex = current.step as number;
     const draft = current.data as TreatmentDraft;
     const result = STEPS[stepIndex].process(input, draft);
 
     if (result.kind === 'reject') {
-      await this.sender.typingMessage(jid);
-      await this.sender.sendText(jid, result.reply);
-      return;
+      return this.reply(jid, result.reply);
     }
 
     if (result.kind === 'commit') {
-      await this.persist(jid, draft);
-      this.state.clear(jid);
-      await this.sender.typingMessage(jid);
-      await this.sender.sendText(jid, 'Tratamento cadastrado com sucesso! ✅');
-      return;
+      return this.commitFlow(jid, draft);
     }
 
+    return this.moveToNextStep(jid, stepIndex, draft, result);
+  }
+
+  private async commitFlow(jid: string, draft: TreatmentDraft): Promise<void> {
+    await this.persist(jid, draft);
+    this.state.clear(jid);
+    await this.reply(jid, MESSAGES.success);
+  }
+
+  private async moveToNextStep(
+    jid: string,
+    currentIndex: number,
+    draft: TreatmentDraft,
+    result: Extract<TreatmentStepResult, { kind: 'advance' }>,
+  ): Promise<void> {
     const nextDraft = { ...draft, ...result.patch };
-    const nextIndex = stepIndex + 1;
+    const nextIndex = currentIndex + 1;
     this.state.set(jid, { flow: FLOW, step: nextIndex, data: nextDraft });
+    await this.reply(jid, STEPS[nextIndex].prompt(nextDraft));
+  }
+
+  private async reply(jid: string, message: string): Promise<void> {
     await this.sender.typingMessage(jid);
-    await this.sender.sendText(jid, STEPS[nextIndex].prompt(nextDraft));
+    await this.sender.sendText(jid, message);
   }
 
   private async persist(jid: string, draft: TreatmentDraft): Promise<void> {
