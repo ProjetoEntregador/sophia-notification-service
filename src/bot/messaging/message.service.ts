@@ -1,11 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { WASocket } from 'baileys';
 import { delay } from '../../utils/delay.js';
-import { MessageSender, SocketProvider } from '../interfaces/index.js';
+import {
+  MessageSenderInterface,
+  SocketProviderInterface,
+} from '../interfaces/index.js';
 
 @Injectable()
-export class MessageService extends MessageSender {
-  constructor(private readonly socketProvider: SocketProvider) {
+export class MessageService extends MessageSenderInterface {
+  constructor(private readonly socketProvider: SocketProviderInterface) {
     super();
   }
 

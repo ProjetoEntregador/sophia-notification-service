@@ -1,3 +1,3 @@
-export abstract class QrCodePresenter {
+export abstract class QrCodePresenterInterface {
   abstract present(qr: string): void;
 }

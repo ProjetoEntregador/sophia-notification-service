@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   MessageHandlerInterface,
-  MessageSender,
+  MessageSenderInterface,
 } from '../../interfaces/index.js';
 import { TreatmentsService } from '../../../modules/treatments/treatments.service.js';
 import { ConversationStateService } from '../state/conversation-state.service.js';
@@ -20,14 +20,16 @@ import {
 } from '../constansts/start-treatment.constants.js';
 
 @Injectable()
-export class StartTreatmentHandler implements MessageHandlerInterface {
+export class StartTreatmentHandler extends MessageHandlerInterface {
   readonly flowName = FLOW;
 
   constructor(
     private readonly treatments: TreatmentsService,
     private readonly state: ConversationStateService,
-    private readonly sender: MessageSender,
-  ) {}
+    private readonly sender: MessageSenderInterface,
+  ) {
+    super();
+  }
 
   canHandle(text: string): boolean {
     return TRIGGERS.includes(text.trim().toLowerCase());

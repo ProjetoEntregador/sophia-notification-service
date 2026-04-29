@@ -9,7 +9,7 @@ import {
 import { WhatsAppConnectionService } from './whatsapp-connection.service.js';
 import {
   MessageRouterInterface,
-  QrCodePresenter,
+  QrCodePresenterInterface,
 } from '../interfaces/index.js';
 
 @Injectable()
@@ -18,7 +18,7 @@ export class WhatsAppSessionService {
 
   constructor(
     private readonly connection: WhatsAppConnectionService,
-    private readonly qrPresenter: QrCodePresenter,
+    private readonly qrPresenter: QrCodePresenterInterface,
     private readonly router: MessageRouterInterface,
   ) {}
 

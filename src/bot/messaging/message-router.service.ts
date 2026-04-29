@@ -1,19 +1,21 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
   MessageHandlerInterface,
-  MessageHandlerRegistry,
+  MessageHandlerRegistryInterface,
   MessageRouterInterface,
 } from '../interfaces/index.js';
 import { ConversationStateService } from './state/conversation-state.service.js';
 
 @Injectable()
-export class MessageRouter implements MessageRouterInterface {
+export class MessageRouter extends MessageRouterInterface {
   private readonly logger = new Logger(MessageRouter.name);
 
   constructor(
-    private readonly registry: MessageHandlerRegistry,
+    private readonly registry: MessageHandlerRegistryInterface,
     private readonly conversationState: ConversationStateService,
-  ) {}
+  ) {
+    super();
+  }
 
   async route(jid: string, text: string): Promise<void> {
     this.logger.log(`Mensagem de ${jid}: ${text}`);

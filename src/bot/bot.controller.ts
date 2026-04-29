@@ -1,9 +1,9 @@
 import { Controller, Post } from '@nestjs/common';
-import { MessageSender } from './interfaces/index.js';
+import { MessageSenderInterface } from './interfaces/index.js';
 
 @Controller('bot')
 export class BotController {
-  constructor(private readonly messageSender: MessageSender) {}
+  constructor(private readonly messageSender: MessageSenderInterface) {}
 
   @Post('status')
   async getStatus(): Promise<{ status: string }> {

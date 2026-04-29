@@ -1,16 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import {
   MessageHandlerInterface,
-  MessageSender,
+  MessageSenderInterface,
 } from '../../interfaces/index.js';
 import { RemindersService } from '../../../modules/reminders/reminders.service.js';
 
 @Injectable()
-export class ConfirmDoseHandler implements MessageHandlerInterface {
+export class ConfirmDoseHandler extends MessageHandlerInterface {
   constructor(
     private readonly remindersService: RemindersService,
-    private readonly sender: MessageSender,
-  ) {}
+    private readonly sender: MessageSenderInterface,
+  ) {
+    super();
+  }
 
   canHandle(text: string): boolean {
     return text.trim() === '1';

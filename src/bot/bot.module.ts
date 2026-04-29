@@ -6,11 +6,11 @@ import { WhatsAppSessionService } from './connection/whatsapp-session.service.js
 import { MessageService } from './messaging/message.service.js';
 import { QrCodeTerminalPresenter } from './presenters/qr-code-terminal.presenter.js';
 import {
-  MessageHandlerRegistry,
+  MessageHandlerRegistryInterface,
   MessageRouterInterface,
-  MessageSender,
-  QrCodePresenter,
-  SocketProvider,
+  MessageSenderInterface,
+  QrCodePresenterInterface,
+  SocketProviderInterface,
 } from './interfaces/index.js';
 import { ConfirmDoseHandler } from './messaging/handlers/confirm-dose.handler.js';
 import { SkipDoseHandler } from './messaging/handlers/skip-dose.handler.js';
@@ -38,15 +38,18 @@ import { ConversationStateService } from './messaging/state/conversation-state.s
 
     StaticMessageHandlerRegistry,
     {
-      provide: MessageHandlerRegistry,
+      provide: MessageHandlerRegistryInterface,
       useExisting: StaticMessageHandlerRegistry,
     },
     MessageRouter,
     { provide: MessageRouterInterface, useExisting: MessageRouter },
-    { provide: SocketProvider, useExisting: WhatsAppConnectionService },
-    { provide: QrCodePresenter, useClass: QrCodeTerminalPresenter },
-    { provide: MessageSender, useClass: MessageService },
+    {
+      provide: SocketProviderInterface,
+      useExisting: WhatsAppConnectionService,
+    },
+    { provide: QrCodePresenterInterface, useClass: QrCodeTerminalPresenter },
+    { provide: MessageSenderInterface, useClass: MessageService },
   ],
-  exports: [WhatsAppSessionService, MessageSender],
+  exports: [WhatsAppSessionService, MessageSenderInterface],
 })
 export class BotModule {}
