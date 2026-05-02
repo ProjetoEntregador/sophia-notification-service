@@ -5,38 +5,67 @@ import { WhatsAppConnectionService } from './connection/whatsapp-connection.serv
 import { WhatsAppSessionService } from './connection/whatsapp-session.service.js';
 import { MessageService } from './messaging/message.service.js';
 import { QrCodeTerminalPresenter } from './presenters/qr-code-terminal.presenter.js';
-import { LogMessageHandler } from './messaging/log-message.handler.js';
 import {
-  MessageHandler,
-  MessageSender,
-  QrCodePresenter,
-  SocketProvider,
+  MessageHandlerRegistryInterface,
+  MessageRouterInterface,
+  MessageSenderInterface,
+  QrCodePresenterInterface,
+  SocketProviderInterface,
 } from './interfaces/index.js';
+import { ConfirmDoseHandler } from './messaging/handlers/confirm-dose.handler.js';
+import { SkipDoseHandler } from './messaging/handlers/skip-dose.handler.js';
+import { StartTreatmentHandler } from './messaging/handlers/start-treatment.handler.js';
+import { RemindersModule } from '../modules/reminders/reminders.module.js';
+import { TreatmentsModule } from '../modules/treatments/treatments.module.js';
+import { MessageRouter } from './messaging/message-router.service.js';
+import { StaticMessageHandlerRegistry } from './messaging/static-message-handler-registry.js';
+import { ConversationStateService } from './messaging/state/conversation-state.service.js';
+import { AiOrchestratorHandler } from './ai/ai-orchestrator.handler.js';
+import { ChatHistoryService } from './ai/chat-history.service.js';
+import { AiToolsRegistry } from './ai/ai-tools.registry.js';
+import { RegisterTreatmentTool } from './ai/tools/register-treatment.tool.js';
+import { ConfirmDoseTool } from './ai/tools/confirm-dose.tool.js';
+import { SkipDoseTool } from './ai/tools/skip-dose.tool.js';
+import { LocalAiService } from './ai/local-ai.service.js';
+import { AiServiceInterface } from './ai/interfaces/index.js';
 
 @Module({
+  imports: [RemindersModule, TreatmentsModule],
   controllers: [BotController],
   providers: [
     WhatsAppConnectionService,
     WhatsAppSessionService,
+    BotService,
+    MessageService,
+    ConversationStateService,
+
+    ConfirmDoseHandler,
+    SkipDoseHandler,
+    StartTreatmentHandler,
+
+    ChatHistoryService,
+    RegisterTreatmentTool,
+    ConfirmDoseTool,
+    SkipDoseTool,
+    AiToolsRegistry,
+    AiOrchestratorHandler,
+    LocalAiService,
+    { provide: AiServiceInterface, useExisting: LocalAiService },
+
+    StaticMessageHandlerRegistry,
     {
-      provide: SocketProvider,
+      provide: MessageHandlerRegistryInterface,
+      useExisting: StaticMessageHandlerRegistry,
+    },
+    MessageRouter,
+    { provide: MessageRouterInterface, useExisting: MessageRouter },
+    {
+      provide: SocketProviderInterface,
       useExisting: WhatsAppConnectionService,
     },
-    {
-      provide: QrCodePresenter,
-      useClass: QrCodeTerminalPresenter,
-    },
-    {
-      provide: MessageSender,
-      useClass: MessageService,
-    },
-    {
-      provide: MessageHandler,
-      useClass: LogMessageHandler,
-    },
-    MessageService,
-    BotService,
+    { provide: QrCodePresenterInterface, useClass: QrCodeTerminalPresenter },
+    { provide: MessageSenderInterface, useClass: MessageService },
   ],
-  exports: [WhatsAppSessionService, MessageSender],
+  exports: [WhatsAppSessionService, MessageSenderInterface],
 })
 export class BotModule {}

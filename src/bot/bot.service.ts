@@ -7,8 +7,12 @@ export class BotService implements OnModuleInit {
 
   constructor(private readonly session: WhatsAppSessionService) {}
 
-  async onModuleInit(): Promise<void> {
+  onModuleInit(): void {
     this.logger.log('Iniciando sessão WhatsApp...');
-    await this.session.start();
+    void this.session
+      .start()
+      .catch((err) =>
+        this.logger.error('Falha ao iniciar sessão WhatsApp', err),
+      );
   }
 }

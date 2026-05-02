@@ -1,6 +1,6 @@
-export abstract class MessageSender {
+export abstract class MessageSenderInterface {
   abstract sendText(jid: string, text: string): Promise<void>;
-  abstract sendTyping(
+  abstract typingMessage(
     jid: string,
     minMs?: number,
     maxMs?: number,

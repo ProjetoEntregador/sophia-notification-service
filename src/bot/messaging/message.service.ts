@@ -1,11 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { WASocket } from 'baileys';
 import { delay } from '../../utils/delay.js';
-import { MessageSender, SocketProvider } from '../interfaces/index.js';
+import {
+  MessageSenderInterface,
+  SocketProviderInterface,
+} from '../interfaces/index.js';
 
 @Injectable()
-export class MessageService extends MessageSender {
-  constructor(private readonly socketProvider: SocketProvider) {
+export class MessageService extends MessageSenderInterface {
+  constructor(private readonly socketProvider: SocketProviderInterface) {
     super();
   }
 
@@ -17,7 +20,7 @@ export class MessageService extends MessageSender {
     await this.sock.sendMessage(jid, { text });
   }
 
-  async sendTyping(jid: string, minMs = 1500, maxMs = 3000): Promise<void> {
+  async typingMessage(jid: string, minMs = 1500, maxMs = 3000): Promise<void> {
     await this.sock.sendPresenceUpdate('composing', jid);
     await delay(minMs, maxMs);
     await this.sock.sendPresenceUpdate('paused', jid);

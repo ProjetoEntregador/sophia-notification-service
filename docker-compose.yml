@@ -1,0 +1,37 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - 6380:6379
+
+  postgres:
+    image: postgres:16-bullseye
+    ports:
+      - 5433:5432
+    container_name: postgres
+    volumes:
+      - data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_DB=${DB_NAME}
+
+  sophia_notification_service:
+    build:
+      context: .
+      dockerfile: ./compose/nest/Dockerfile
+    container_name: sophia_notification_service
+    env_file: .env
+    environment:
+      - NODE_ENV=production
+    ports:
+      - '3001:3000'
+    depends_on:
+      - postgres
+    volumes:
+      - auth_info_baileys:/app/auth_info_baileys
+
+volumes:
+  data: {}
+  auth_info_baileys: {}

@@ -1,0 +1,1 @@
+ALTER TABLE "treatments" ADD COLUMN "jid" varchar(255) NOT NULL;

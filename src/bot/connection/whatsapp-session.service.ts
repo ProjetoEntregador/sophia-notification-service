@@ -1,4 +1,4 @@
-import { Injectable, Logger, Optional } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Boom } from '@hapi/boom';
 import {
   ConnectionState,
@@ -7,7 +7,10 @@ import {
   WASocket,
 } from 'baileys';
 import { WhatsAppConnectionService } from './whatsapp-connection.service.js';
-import { MessageHandler, QrCodePresenter } from '../interfaces/index.js';
+import {
+  MessageRouterInterface,
+  QrCodePresenterInterface,
+} from '../interfaces/index.js';
 
 @Injectable()
 export class WhatsAppSessionService {
@@ -15,9 +18,8 @@ export class WhatsAppSessionService {
 
   constructor(
     private readonly connection: WhatsAppConnectionService,
-    private readonly qrPresenter: QrCodePresenter,
-    @Optional()
-    private readonly messageHandlers: MessageHandler[] = [],
+    private readonly qrPresenter: QrCodePresenterInterface,
+    private readonly router: MessageRouterInterface,
   ) {}
 
   async start(): Promise<void> {
@@ -59,6 +61,7 @@ export class WhatsAppSessionService {
     sock.ev.on('messages.upsert', ({ messages }) => {
       const msg: WAMessage | undefined = messages[0];
       if (!msg?.message) return;
+      if (msg.key.fromMe) return;
 
       const from = msg.key.remoteJid;
       if (!from) return;
@@ -67,11 +70,7 @@ export class WhatsAppSessionService {
         msg.message.conversation ?? msg.message.extendedTextMessage?.text;
       if (!text) return;
 
-      console.log('Mensagem recebida:', msg.key.remoteJid, msg.pushName, text);
-
-      for (const handler of this.messageHandlers) {
-        void handler.handle(msg, from, text);
-      }
+      void this.router.route(from, text);
     });
   }
 
