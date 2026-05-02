@@ -29,9 +29,18 @@ export class MessageRouter extends MessageRouterInterface {
     try {
       await handler.handle(jid, text);
     } catch (err) {
+      const error = err as Error & { cause?: unknown };
+      const cause = error.cause as
+        | (Error & { code?: string; detail?: string })
+        | undefined;
       this.logger.error(
-        `Falha em ${handler.constructor.name}: ${(err as Error).message}`,
-        (err as Error).stack,
+        `Falha em ${handler.constructor.name}: ${error.message}` +
+          (cause
+            ? ` | cause: ${cause.message}` +
+              (cause.code ? ` [${cause.code}]` : '') +
+              (cause.detail ? ` — ${cause.detail}` : '')
+            : ''),
+        error.stack,
       );
     }
   }

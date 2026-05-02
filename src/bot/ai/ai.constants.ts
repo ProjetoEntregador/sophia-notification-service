@@ -2,6 +2,13 @@ export const AI_FLOW = 'ai_chat';
 export const MAX_TOOL_ITERATIONS = 5;
 export const MAX_HISTORY_MESSAGES = 40;
 
+export const AI_FALLBACK_MESSAGE =
+  'Estou com dificuldades para responder agora. Pode tentar de novo em alguns minutos?\n\n' +
+  'Enquanto isso, você pode usar os comandos rápidos:\n' +
+  '• *cadastrar* — novo tratamento\n' +
+  '• *1* — confirmar dose\n' +
+  '• *2* — pular dose';
+
 export const AI_SYSTEM_PROMPT = `Você é um assistente da Sophia, um serviço de lembretes de medicamentos via WhatsApp.
 
 Seu papel é ajudar o paciente a:
