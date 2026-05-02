@@ -20,6 +20,14 @@ import { TreatmentsModule } from '../modules/treatments/treatments.module.js';
 import { MessageRouter } from './messaging/message-router.service.js';
 import { StaticMessageHandlerRegistry } from './messaging/static-message-handler-registry.js';
 import { ConversationStateService } from './messaging/state/conversation-state.service.js';
+import { AiOrchestratorHandler } from './ai/ai-orchestrator.handler.js';
+import { ChatHistoryService } from './ai/chat-history.service.js';
+import { AiToolsRegistry } from './ai/ai-tools.registry.js';
+import { RegisterTreatmentTool } from './ai/tools/register-treatment.tool.js';
+import { ConfirmDoseTool } from './ai/tools/confirm-dose.tool.js';
+import { SkipDoseTool } from './ai/tools/skip-dose.tool.js';
+import { LocalAiService } from './ai/local-ai.service.js';
+import { AiServiceInterface } from './ai/interfaces/index.js';
 
 @Module({
   imports: [RemindersModule, TreatmentsModule],
@@ -31,10 +39,18 @@ import { ConversationStateService } from './messaging/state/conversation-state.s
     MessageService,
     ConversationStateService,
 
-    // Handlers de mensagens
     ConfirmDoseHandler,
     SkipDoseHandler,
     StartTreatmentHandler,
+
+    ChatHistoryService,
+    RegisterTreatmentTool,
+    ConfirmDoseTool,
+    SkipDoseTool,
+    AiToolsRegistry,
+    AiOrchestratorHandler,
+    LocalAiService,
+    { provide: AiServiceInterface, useExisting: LocalAiService },
 
     StaticMessageHandlerRegistry,
     {

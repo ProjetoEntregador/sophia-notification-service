@@ -6,6 +6,7 @@ import {
 import { ConfirmDoseHandler } from './handlers/confirm-dose.handler.js';
 import { SkipDoseHandler } from './handlers/skip-dose.handler.js';
 import { StartTreatmentHandler } from './handlers/start-treatment.handler.js';
+import { AiOrchestratorHandler } from '../ai/ai-orchestrator.handler.js';
 
 @Injectable()
 export class StaticMessageHandlerRegistry extends MessageHandlerRegistryInterface {
@@ -15,8 +16,9 @@ export class StaticMessageHandlerRegistry extends MessageHandlerRegistryInterfac
     startTreatment: StartTreatmentHandler,
     confirmDose: ConfirmDoseHandler,
     skipDose: SkipDoseHandler,
+    aiOrchestrator: AiOrchestratorHandler,
   ) {
     super();
-    this.handlers = [startTreatment, confirmDose, skipDose];
+    this.handlers = [startTreatment, confirmDose, skipDose, aiOrchestrator];
   }
 }
