@@ -117,7 +117,6 @@ export class StartTreatmentHandler extends MessageHandlerInterface {
     await this.treatments.create({
       userId: jidToUserId(jid),
       jid,
-      medicineName: draft.medicineName as string,
       intervalHours: draft.intervalHours as number,
       startTime: draft.startTime as string,
       endTime: draft.endTime as string,

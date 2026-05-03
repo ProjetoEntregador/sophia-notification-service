@@ -7,7 +7,6 @@ export type NewTreatment = InferInsertModel<typeof treatments>;
 export type CreateTreatmentInput = {
   userId: string;
   jid: string;
-  medicineName: string;
   intervalHours: number;
   startTime: string;
   endTime: string;
@@ -18,7 +17,6 @@ export type UpdateTreatmentInput = Partial<CreateTreatmentInput>;
 export type CreateTreatmentDto = {
   userId: string;
   jid: string;
-  medicineName: string;
   intervalHours: number;
   startTime: string;
   endTime: string;
@@ -27,7 +25,6 @@ export type CreateTreatmentDto = {
 export type UpdateTreatmentDto = Partial<CreateTreatmentDto>;
 
 export type TreatmentDraft = Partial<{
-  medicineName: string;
   intervalHours: number;
   startTime: string;
   endTime: string;

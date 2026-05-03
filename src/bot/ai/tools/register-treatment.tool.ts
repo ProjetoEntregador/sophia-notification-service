@@ -5,7 +5,6 @@ import { jidToUserId } from '../../../utils/functions.js';
 import { AiToolInterface } from '../interfaces/index.js';
 
 type RegisterTreatmentArgs = {
-  medicineName: string;
   intervalHours: number;
   startTime: string;
   endTime: string;
@@ -20,10 +19,6 @@ export class RegisterTreatmentTool extends AiToolInterface {
     inputSchema: {
       type: 'object',
       properties: {
-        medicineName: {
-          type: 'string',
-          description: 'Nome do medicamento.',
-        },
         intervalHours: {
           type: 'integer',
           minimum: 1,
@@ -41,7 +36,7 @@ export class RegisterTreatmentTool extends AiToolInterface {
             'Data e hora de término do tratamento em ISO 8601 (ex: 2026-05-11T11:00:00Z).',
         },
       },
-      required: ['medicineName', 'intervalHours', 'startTime', 'endTime'],
+      required: ['intervalHours', 'startTime', 'endTime'],
     },
   };
 
@@ -65,12 +60,11 @@ export class RegisterTreatmentTool extends AiToolInterface {
       const treatment = await this.treatments.create({
         userId: jidToUserId(jid),
         jid,
-        medicineName: input.medicineName,
         intervalHours: input.intervalHours,
         startTime: start.toISOString(),
         endTime: end.toISOString(),
       });
-      return `Tratamento cadastrado com id ${treatment.id}: ${input.medicineName}, a cada ${input.intervalHours}h, de ${start.toISOString()} até ${end.toISOString()}.`;
+      return `Tratamento cadastrado com id ${treatment.id}: a cada ${input.intervalHours}h, de ${start.toISOString()} até ${end.toISOString()}.`;
     } catch (err) {
       return `Erro ao cadastrar tratamento: ${(err as Error).message}`;
     }

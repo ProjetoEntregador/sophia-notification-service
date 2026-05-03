@@ -61,7 +61,6 @@ export class TreatmentsService {
     return {
       userId: input.userId,
       jid: input.jid,
-      medicineName: input.medicineName,
       intervalHours: input.intervalHours,
       startTime: input.startTime ? new Date(input.startTime) : undefined,
       endTime: input.endTime ? new Date(input.endTime) : undefined,

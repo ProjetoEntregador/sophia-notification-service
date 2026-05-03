@@ -5,6 +5,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { RemindersModule } from './modules/reminders/reminders.module';
 import { TreatmentsModule } from './modules/treatments/treatments.module';
 import 'dotenv/config';
+import { MedicationsModule } from './modules/medications/medications.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import 'dotenv/config';
     ScheduleModule.forRoot(),
     RemindersModule,
     TreatmentsModule,
+    MedicationsModule,
   ],
 })
 export class AppModule {}

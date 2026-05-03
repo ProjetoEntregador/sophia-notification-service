@@ -33,7 +33,6 @@ export function buildTreatmentSummary(draft: TreatmentDraft): string {
   const end = new Date(draft.endTime as string);
   return [
     'Confirma os dados?',
-    `💊 ${draft.medicineName as string}`,
     `⏱ De ${draft.intervalHours as number} em ${draft.intervalHours as number} horas`,
     `📅 ${formatBrDate(start)} → ${formatBrDate(end)}`,
     '',
