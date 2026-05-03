@@ -3,6 +3,7 @@ import { and, asc, eq, isNull } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DRIZZLE } from '../../database.module';
 import { reminders } from '../../db/schema/reminders';
+import { treatments } from '../../db/schema/treatments';
 import {
   CreateReminderInput,
   NewReminder,
@@ -54,6 +55,39 @@ export class RemindersService {
     if (result.length === 0) {
       throw new NotFoundException(`Reminder ${id} not found`);
     }
+  }
+
+  async delay(id: string, delay: number): Promise<void> {
+    const [reminder] = await this.db
+      .update(reminders)
+      .set({
+        scheduledTime: new Date(
+          reminders.scheduledTime._.data.getTime() + delay,
+        ),
+      })
+      .where(eq(reminders.id, id))
+      .returning();
+
+    await this.db
+      .update(treatments)
+      .set({
+        endTime: new Date(treatments.endTime._.data.getTime() + delay),
+      })
+      .where(eq(treatments.id, reminder.treatmentId));
+  }
+
+  async confirmReminder(id: string): Promise<void> {
+    await this.db
+      .update(reminders)
+      .set({ confirmed: true, confirmedAt: new Date() })
+      .where(eq(reminders.id, id));
+  }
+
+  async skipReminder(id: string): Promise<void> {
+    await this.db
+      .update(reminders)
+      .set({ confirmed: false, confirmedAt: new Date() })
+      .where(eq(reminders.id, id));
   }
 
   async confirmDose(jid: string): Promise<Reminder | null> {

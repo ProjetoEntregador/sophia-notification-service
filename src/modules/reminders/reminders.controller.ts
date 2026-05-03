@@ -10,7 +10,11 @@ import {
   Post,
 } from '@nestjs/common';
 import { RemindersService } from './reminders.service';
-import { CreateReminderDto, UpdateReminderDto } from '../../@types';
+import {
+  CreateReminderDto,
+  DelayReminder,
+  UpdateReminderDto,
+} from '../../@types';
 
 @Controller('reminders')
 export class RemindersController {
@@ -43,5 +47,20 @@ export class RemindersController {
   @HttpCode(204)
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.remindersService.remove(id);
+  }
+
+  @Patch('delay:id')
+  delay(@Param('id', ParseUUIDPipe) id: string, @Body() body: DelayReminder) {
+    return this.remindersService.delay(id, body.delay);
+  }
+
+  @Post('confirm:id')
+  confirmReminder(@Param('id', ParseUUIDPipe) id: string) {
+    return this.remindersService.confirmReminder(id);
+  }
+
+  @Post('skip:id')
+  skipReminder(@Param('id', ParseUUIDPipe) id: string) {
+    return this.remindersService.skipReminder(id);
   }
 }
