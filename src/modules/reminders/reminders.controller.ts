@@ -44,4 +44,10 @@ export class RemindersController {
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.remindersService.remove(id);
   }
+
+  @Get('today')
+  findAllForToday() {
+    const today = new Date();
+    return this.remindersService.findAllForDay(today);
+  }
 }

@@ -1,5 +1,5 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { and, asc, eq, isNull } from 'drizzle-orm';
+import { and, asc, eq, gte, isNull, lte } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DRIZZLE } from '../../database.module';
 import { reminders } from '../../db/schema/reminders';
@@ -62,6 +62,24 @@ export class RemindersService {
 
   async skipDose(jid: string): Promise<Reminder | null> {
     return this.resolvePending(jid, false);
+  }
+
+  async findAllForDay(day: Date): Promise<Reminder[]> {
+    const startOfTheDay = new Date(day);
+    startOfTheDay.setHours(0, 0, 0, 0);
+
+    const endOfTheDay = new Date(day);
+    endOfTheDay.setHours(23, 59, 59, 999);
+
+    return this.db
+      .select()
+      .from(reminders)
+      .where(
+        and(
+          lte(reminders.scheduledTime, endOfTheDay),
+          gte(reminders.scheduledTime, startOfTheDay),
+        ),
+      );
   }
 
   // TODO: filtrar por usuário quando existir tabela de usuarios existir, mapeando jid → userId.
