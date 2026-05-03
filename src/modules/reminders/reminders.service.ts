@@ -90,6 +90,23 @@ export class RemindersService {
       .where(eq(reminders.id, id));
   }
 
+  async getRemindersInBetweenDates(
+    startDate: Date,
+    endDate: Date,
+  ): Promise<Reminder[]> {
+    return await this.db
+      .select()
+      .from(reminders)
+      .where(
+        and(
+          gte(reminders.scheduledTime, startDate),
+          lte(reminders.scheduledTime, endDate),
+          isNull(reminders.sentAt),
+        ),
+      )
+      .orderBy(reminders.scheduledTime);
+  }
+
   async confirmDose(jid: string): Promise<Reminder | null> {
     return this.resolvePending(jid, true);
   }
