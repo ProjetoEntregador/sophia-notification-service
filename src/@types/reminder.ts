@@ -25,3 +25,7 @@ export type CreateReminderDto = {
 };
 
 export type UpdateReminderDto = Partial<CreateReminderDto>;
+
+export type DelayReminder = {
+  delay: number;
+};
