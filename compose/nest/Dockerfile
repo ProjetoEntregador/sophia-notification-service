@@ -14,6 +14,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY package.json yarn.lock ./
 
+RUN sed -i \
+      -e 's#git+ssh://git@github.com/#https://github.com/#g' \
+      -e 's#ssh://git@github.com/#https://github.com/#g' \
+      -e 's#git@github.com:#https://github.com/#g' \
+      yarn.lock
+
 ENV npm_config_python=python3
 RUN yarn install --network-timeout 600000
 
