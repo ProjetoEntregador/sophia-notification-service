@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -8,6 +9,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { RemindersService } from './reminders.service';
 import {
@@ -15,6 +17,7 @@ import {
   DelayReminder,
   UpdateReminderDto,
 } from '../../@types';
+import { toDate } from 'src/utils/functions';
 
 @Controller('reminders')
 export class RemindersController {
@@ -68,5 +71,16 @@ export class RemindersController {
   findAllForToday() {
     const today = new Date();
     return this.remindersService.findAllForDay(today);
+  }
+
+  @Get('pending')
+  findAllPending(@Query('start') start: string, @Query('end') end: string) {
+    const startDate = toDate(start);
+    const endDate = toDate(end);
+
+    if (!startDate || !endDate) {
+      throw new BadRequestException("Provide a valid 'start' and 'end' date");
+    }
+    return this.remindersService.getRemindersInBetweenDates(startDate, endDate);
   }
 }
