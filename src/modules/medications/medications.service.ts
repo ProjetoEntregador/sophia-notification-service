@@ -12,6 +12,7 @@ import {
 import { medications } from 'src/db/schema/medications';
 import { treatments } from 'src/db/schema';
 import { treatmentsToMedications } from 'src/db/schema/treatmentsToMedications';
+import { Treatment } from 'src/@types';
 
 @Injectable()
 export class MedicationsService {
@@ -88,6 +89,21 @@ export class MedicationsService {
       .map((r) => r.treatment)
       .filter((t) => t !== null);
 
+    const { totalConsumption, lastConsumptionDate } =
+      this.getMedicationConsumptionUntilDate(treatmentsList, date);
+
+    const remaining = medication.quantity - totalConsumption;
+
+    return {
+      quantity: Math.max(remaining, 0),
+      lastConsumptionDate,
+    };
+  }
+
+  private getMedicationConsumptionUntilDate(
+    treatmentsList: Treatment[],
+    date: Date,
+  ) {
     const now = new Date();
     let totalConsumption = 0;
     let lastConsumptionDate: Date | null = null;
@@ -124,12 +140,7 @@ export class MedicationsService {
       }
     }
 
-    const remaining = medication.quantity - totalConsumption;
-
-    return {
-      quantity: Math.max(remaining, 0),
-      lastConsumptionDate,
-    };
+    return { totalConsumption, lastConsumptionDate };
   }
 
   private toValues(
