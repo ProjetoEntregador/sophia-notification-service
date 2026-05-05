@@ -7,4 +7,4 @@ import { UsersController } from './users.controller';
   controllers: [UsersController],
   providers: [UsersService],
 })
-export class RemindersModule {}
+export class UsersModule {}
