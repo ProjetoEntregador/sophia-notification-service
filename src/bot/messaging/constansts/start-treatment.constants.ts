@@ -26,13 +26,13 @@ export const MESSAGES = {
 } as const;
 
 export const STEPS: ReadonlyArray<TreatmentStep> = [
-  // {
-  //   prompt: () => 'Qual o nome do remédio?',
-  //   process: (input) =>
-  //     input.length === 0
-  //       ? { kind: 'reject', reply: MESSAGES.emptyMedicine }
-  //       : { kind: 'advance', patch: { medicineName: input } },
-  // },
+  {
+    prompt: () => 'Qual o nome do(s) medicamento(s)?',
+    process: (input) =>
+      input.length === 0
+        ? { kind: 'reject', reply: MESSAGES.emptyMedicine }
+        : { kind: 'advance', patch: { medications: input.split(',') } },
+  },
   {
     prompt: () => 'De quantas em quantas horas? (ex: 8)',
     process: (input) => {

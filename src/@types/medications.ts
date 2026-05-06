@@ -5,7 +5,6 @@ export type Medication = InferSelectModel<typeof medications>;
 export type NewMedication = InferInsertModel<typeof medications>;
 
 export type CreateMedicationInput = {
-  id: string;
   userId: string;
   jid: string;
   name: string;

@@ -10,6 +10,7 @@ export type CreateTreatmentInput = {
   intervalHours: number;
   startTime: string;
   endTime: string;
+  medicationsIds: string[];
 };
 
 export type UpdateTreatmentInput = Partial<CreateTreatmentInput>;
@@ -20,6 +21,7 @@ export type CreateTreatmentDto = {
   intervalHours: number;
   startTime: string;
   endTime: string;
+  medicationsIds: string[];
 };
 
 export type UpdateTreatmentDto = Partial<CreateTreatmentDto>;
@@ -28,6 +30,7 @@ export type TreatmentDraft = Partial<{
   intervalHours: number;
   startTime: string;
   endTime: string;
+  medications: string[];
 }>;
 
 export type TreatmentStepResult =

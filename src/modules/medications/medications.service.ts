@@ -1,5 +1,5 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { eq, ilike } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DRIZZLE } from '../../database.module';
 import {
@@ -13,10 +13,14 @@ import { medications } from 'src/db/schema/medications';
 import { treatments } from 'src/db/schema';
 import { treatmentsToMedications } from 'src/db/schema/treatmentsToMedications';
 import { Treatment } from 'src/@types';
+import { TreatmentsToMedicationService } from '../treatmentsToMedication/treatmentsToMedication.service';
 
 @Injectable()
 export class MedicationsService {
-  constructor(@Inject(DRIZZLE) private readonly db: NodePgDatabase) {}
+  constructor(
+    @Inject(DRIZZLE) private readonly db: NodePgDatabase,
+    private readonly treatmentsToMedication: TreatmentsToMedicationService,
+  ) {}
 
   findAll(): Promise<Medication[]> {
     return this.db.select().from(medications);
@@ -57,6 +61,16 @@ export class MedicationsService {
     if (result.length === 0) {
       throw new NotFoundException(`Medication ${id} not found`);
     }
+
+    await this.treatmentsToMedication.removeManyByForeignId('medicationId', id);
+  }
+
+  async getMedicationsByName(name: string): Promise<Medication[]> {
+    const rows = await this.db
+      .select()
+      .from(medications)
+      .where(ilike(medications.name, `%${name}%`));
+    return rows;
   }
 
   async getMedicationUntilDate(
@@ -147,11 +161,10 @@ export class MedicationsService {
     input: Partial<CreateMedicationInput>,
   ): Partial<NewMedication> {
     return {
-      id: input.id,
+      userId: input.userId,
       jid: input.jid,
       name: input.name,
       quantity: input.quantity,
-      userId: input.userId,
     };
   }
 }

@@ -3,8 +3,10 @@ import { AiToolDefinition } from '../../../@types';
 import { TreatmentsService } from '../../../modules/treatments/treatments.service.js';
 import { jidToUserId } from '../../../utils/functions.js';
 import { AiToolInterface } from '../interfaces/index.js';
+import { MedicationsService } from 'src/modules/medications/medications.service';
 
 type RegisterTreatmentArgs = {
+  medications: string[];
   intervalHours: number;
   startTime: string;
   endTime: string;
@@ -25,6 +27,10 @@ export class RegisterTreatmentTool extends AiToolInterface {
           maximum: 24,
           description: 'Intervalo entre doses em horas (1 a 24).',
         },
+        medications: {
+          type: 'array',
+          description: 'Nome dos medicamentos usados no tratamento.',
+        },
         startTime: {
           type: 'string',
           description:
@@ -36,11 +42,14 @@ export class RegisterTreatmentTool extends AiToolInterface {
             'Data e hora de término do tratamento em ISO 8601 (ex: 2026-05-11T11:00:00Z).',
         },
       },
-      required: ['intervalHours', 'startTime', 'endTime'],
+      required: ['intervalHours', 'medication', 'startTime', 'endTime'],
     },
   };
 
-  constructor(private readonly treatments: TreatmentsService) {
+  constructor(
+    private readonly treatments: TreatmentsService,
+    private readonly medications: MedicationsService,
+  ) {
     super();
   }
 
@@ -57,12 +66,26 @@ export class RegisterTreatmentTool extends AiToolInterface {
     }
 
     try {
+      const medicationsId: string[] = [];
+
+      for (const medicationName of input.medications) {
+        const medication =
+          await this.medications.getMedicationsByName(medicationName);
+
+        if (medication.length != 1) {
+          return 'Erro: É preciso definir qual a medicação a ser tomada.';
+        } else {
+          medicationsId.push(medication[0].id);
+        }
+      }
+
       const treatment = await this.treatments.create({
         userId: jidToUserId(jid),
         jid,
         intervalHours: input.intervalHours,
         startTime: start.toISOString(),
         endTime: end.toISOString(),
+        medicationsIds: medicationsId,
       });
       return `Tratamento cadastrado com id ${treatment.id}: a cada ${input.intervalHours}h, de ${start.toISOString()} até ${end.toISOString()}.`;
     } catch (err) {
