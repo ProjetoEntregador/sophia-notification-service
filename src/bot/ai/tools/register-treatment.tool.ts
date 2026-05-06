@@ -21,15 +21,15 @@ export class RegisterTreatmentTool extends AiToolInterface {
     inputSchema: {
       type: 'object',
       properties: {
+        medications: {
+          type: 'array',
+          description: 'Nome dos medicamentos usados no tratamento.',
+        },
         intervalHours: {
           type: 'integer',
           minimum: 1,
           maximum: 24,
           description: 'Intervalo entre doses em horas (1 a 24).',
-        },
-        medications: {
-          type: 'array',
-          description: 'Nome dos medicamentos usados no tratamento.',
         },
         startTime: {
           type: 'string',
@@ -42,7 +42,7 @@ export class RegisterTreatmentTool extends AiToolInterface {
             'Data e hora de término do tratamento em ISO 8601 (ex: 2026-05-11T11:00:00Z).',
         },
       },
-      required: ['intervalHours', 'medication', 'startTime', 'endTime'],
+      required: ['medication', 'intervalHours', 'startTime', 'endTime'],
     },
   };
 

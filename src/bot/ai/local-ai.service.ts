@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { isAxiosError } from 'axios';
 import { AiChatRequest, AiChatResponse } from '../../@types';
 import { AiServiceInterface } from './interfaces/index.js';
-import { baseApi } from '../../utils/baseApi.js';
+import { baseApiToAI } from '../../utils/baseApi.js';
 
 const CHAT_PATH = '/chat/completions';
 
@@ -12,7 +12,10 @@ export class LocalAiService extends AiServiceInterface {
 
   async chat(request: AiChatRequest): Promise<AiChatResponse> {
     try {
-      const { data } = await baseApi.post<AiChatResponse>(CHAT_PATH, request);
+      const { data } = await baseApiToAI.post<AiChatResponse>(
+        CHAT_PATH,
+        request,
+      );
       this.logger.debug(
         `chat ok — text=${!!data.text}, toolCalls=${data.toolCalls?.length ?? 0}`,
       );
@@ -21,7 +24,7 @@ export class LocalAiService extends AiServiceInterface {
       if (isAxiosError(err)) {
         if (err.code === 'ECONNABORTED') {
           throw new Error(
-            `AI service timeout (${baseApi.defaults.timeout}ms) at ${baseApi.defaults.baseURL}${CHAT_PATH}`,
+            `AI service timeout (${baseApiToAI.defaults.timeout}ms) at ${baseApiToAI.defaults.baseURL}${CHAT_PATH}`,
           );
         }
         const status = err.response?.status;
