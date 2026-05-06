@@ -1,5 +1,5 @@
 export const AI_FLOW = 'ai_chat';
-export const MAX_TOOL_ITERATIONS = 5;
+export const MAX_TOOL_ITERATIONS = 10;
 export const MAX_HISTORY_MESSAGES = 40;
 
 export const AI_FALLBACK_MESSAGE =

@@ -23,6 +23,7 @@ export class RegisterTreatmentTool extends AiToolInterface {
       properties: {
         medications: {
           type: 'array',
+          items: { type: 'string' },
           description: 'Nome dos medicamentos usados no tratamento.',
         },
         intervalHours: {
@@ -42,7 +43,7 @@ export class RegisterTreatmentTool extends AiToolInterface {
             'Data e hora de término do tratamento em ISO 8601 (ex: 2026-05-11T11:00:00Z).',
         },
       },
-      required: ['medication', 'intervalHours', 'startTime', 'endTime'],
+      required: ['medications', 'intervalHours', 'startTime', 'endTime'],
     },
   };
 
