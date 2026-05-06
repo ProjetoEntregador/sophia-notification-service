@@ -18,7 +18,7 @@ import {
   STEPS,
   TRIGGERS,
 } from '../constansts/start-treatment.constants.js';
-import { MedicationsService } from 'src/modules/medications/medications.service.js';
+import { MedicationsService } from '../../../modules/medications/medications.service.js';
 
 @Injectable()
 export class StartTreatmentHandler extends MessageHandlerInterface {
