@@ -4,6 +4,8 @@ services:
     container_name: redis
     ports:
       - 6380:6379
+    networks:
+      - net1
 
   postgres:
     image: postgres:16-bullseye
@@ -16,6 +18,8 @@ services:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_DB=${DB_NAME}
+    networks:
+      - net1
 
   sophia_notification_service:
     build:
@@ -31,6 +35,13 @@ services:
       - postgres
     volumes:
       - auth_info_baileys:/app/auth_info_baileys
+    networks:
+      - net1
+
+networks:
+  net1:
+    external: true
+    name: net1
 
 volumes:
   data: {}
