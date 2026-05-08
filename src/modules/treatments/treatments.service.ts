@@ -9,10 +9,14 @@ import {
   Treatment,
   UpdateTreatmentInput,
 } from '../../@types';
+import { TreatmentsToMedicationService } from '../treatmentsToMedication/treatmentsToMedication.service';
 
 @Injectable()
 export class TreatmentsService {
-  constructor(@Inject(DRIZZLE) private readonly db: NodePgDatabase) {}
+  constructor(
+    @Inject(DRIZZLE) private readonly db: NodePgDatabase,
+    private readonly treatmentsToMedication: TreatmentsToMedicationService,
+  ) {}
 
   findAll(): Promise<Treatment[]> {
     return this.db.select().from(treatments);
@@ -32,6 +36,15 @@ export class TreatmentsService {
       .insert(treatments)
       .values(this.toValues(input) as NewTreatment)
       .returning();
+
+    const treatmentsToMedicationsData = input.medicationsIds.map(
+      (medicationId) => {
+        return { medicationId, treatmentId: row.id };
+      },
+    );
+
+    await this.treatmentsToMedication.createMany(treatmentsToMedicationsData);
+
     return row;
   }
 
@@ -42,6 +55,22 @@ export class TreatmentsService {
       .where(eq(treatments.id, id))
       .returning();
     if (!row) throw new NotFoundException(`Treatment ${id} not found`);
+
+    if (input.medicationsIds) {
+      await this.treatmentsToMedication.removeManyByForeignId(
+        'treatmentId',
+        id,
+      );
+
+      const treatmentsToMedicationsData = input.medicationsIds.map(
+        (medicationId) => {
+          return { medicationId, treatmentId: row.id };
+        },
+      );
+
+      await this.treatmentsToMedication.createMany(treatmentsToMedicationsData);
+    }
+
     return row;
   }
 
@@ -50,9 +79,12 @@ export class TreatmentsService {
       .delete(treatments)
       .where(eq(treatments.id, id))
       .returning({ id: treatments.id });
+
     if (result.length === 0) {
       throw new NotFoundException(`Treatment ${id} not found`);
     }
+
+    await this.treatmentsToMedication.removeManyByForeignId('treatmentId', id);
   }
 
   private toValues(
@@ -61,7 +93,6 @@ export class TreatmentsService {
     return {
       userId: input.userId,
       jid: input.jid,
-      medicineName: input.medicineName,
       intervalHours: input.intervalHours,
       startTime: input.startTime ? new Date(input.startTime) : undefined,
       endTime: input.endTime ? new Date(input.endTime) : undefined,

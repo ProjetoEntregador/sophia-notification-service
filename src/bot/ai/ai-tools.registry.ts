@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AiToolDefinition } from '../../@types';
 import { AiToolInterface } from './interfaces/index.js';
+import { RegisterMedicationTool } from './tools/register-medication.tool.js';
 import { RegisterTreatmentTool } from './tools/register-treatment.tool.js';
 import { ConfirmDoseTool } from './tools/confirm-dose.tool.js';
 import { SkipDoseTool } from './tools/skip-dose.tool.js';
@@ -11,11 +12,17 @@ export class AiToolsRegistry {
   private readonly byName = new Map<string, AiToolInterface>();
 
   constructor(
+    registerMedication: RegisterMedicationTool,
     registerTreatment: RegisterTreatmentTool,
     confirmDose: ConfirmDoseTool,
     skipDose: SkipDoseTool,
   ) {
-    for (const tool of [registerTreatment, confirmDose, skipDose]) {
+    for (const tool of [
+      registerMedication,
+      registerTreatment,
+      confirmDose,
+      skipDose,
+    ]) {
       this.byName.set(tool.definition.name, tool);
     }
   }
