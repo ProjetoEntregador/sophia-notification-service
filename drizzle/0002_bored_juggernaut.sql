@@ -1,0 +1,1 @@
+ALTER TABLE "treatments" DROP COLUMN "medicine_name";

@@ -9,7 +9,7 @@ import { AiToolsRegistry } from './ai-tools.registry.js';
 import {
   AI_FALLBACK_MESSAGE,
   AI_FLOW,
-  AI_SYSTEM_PROMPT,
+  buildSystemPrompt,
   MAX_TOOL_ITERATIONS,
 } from './ai.constants.js';
 
@@ -35,52 +35,78 @@ export class AiOrchestratorHandler extends MessageHandlerInterface {
     this.history.append(jid, { role: 'user', content: text });
 
     try {
-      for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
-        const response = await this.ai.chat({
-          systemPrompt: AI_SYSTEM_PROMPT,
-          messages: this.history.get(jid),
-          tools: this.tools.definitions(),
-        });
+      await this.runChat(jid);
+      return;
+    } catch (err) {
+      const errorMessage = (err as Error).message;
 
-        const hasTools = !!response.toolCalls?.length;
+      if (errorMessage.includes('tool_use_failed')) {
+        this.logger.warn(
+          `tool_use_failed para ${jid} — limpando histórico e tentando novamente`,
+        );
+        this.history.clear(jid);
+        this.history.append(jid, { role: 'user', content: text });
 
-        this.history.append(jid, {
-          role: 'assistant',
-          content: response.text,
-          toolCalls: response.toolCalls,
-        });
-
-        if (!hasTools) {
-          if (response.text) {
-            await this.sender.typingMessage(jid);
-            await this.sender.sendText(jid, response.text);
-          }
+        try {
+          await this.runChat(jid);
           return;
+        } catch (retryErr) {
+          this.logger.error(
+            `Retry após reset também falhou para ${jid}: ${(retryErr as Error).message}`,
+            (retryErr as Error).stack,
+          );
         }
-
-        for (const call of response.toolCalls!) {
-          const result = await this.tools.execute(jid, call.name, call.args);
-          this.history.append(jid, {
-            role: 'tool',
-            toolUseId: call.toolUseId,
-            content: result,
-          });
-        }
+      } else {
+        this.logger.error(
+          `Falha ao chamar IA para ${jid}: ${errorMessage}`,
+          (err as Error).stack,
+        );
       }
 
-      this.logger.warn(`Limite de iterações atingido para ${jid}`);
-      await this.sender.typingMessage(jid);
-      await this.sender.sendText(
-        jid,
-        'Desculpe, não consegui concluir sua solicitação. Pode tentar de novo?',
-      );
-    } catch (err) {
-      this.logger.error(
-        `Falha ao chamar IA para ${jid}: ${(err as Error).message}`,
-        (err as Error).stack,
-      );
       await this.sender.typingMessage(jid);
       await this.sender.sendText(jid, AI_FALLBACK_MESSAGE);
     }
+  }
+
+  private async runChat(jid: string): Promise<void> {
+    for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
+      const response = await this.ai.chat({
+        systemPrompt: buildSystemPrompt(),
+        messages: this.history.get(jid),
+        tools: this.tools.definitions(),
+      });
+
+      const hasTools = !!response.toolCalls?.length;
+
+      this.history.append(jid, {
+        role: 'assistant',
+        content: response.text,
+        toolCalls: response.toolCalls,
+      });
+
+      if (!hasTools) {
+        if (response.text) {
+          await this.sender.typingMessage(jid);
+          await this.sender.sendText(jid, response.text);
+        }
+        return;
+      }
+
+      for (const call of response.toolCalls!) {
+        const result = await this.tools.execute(jid, call.name, call.args);
+        this.history.append(jid, {
+          role: 'tool',
+          toolUseId: call.toolUseId,
+          content: result,
+        });
+      }
+    }
+
+    this.logger.warn(`Limite de iterações atingido para ${jid}`);
+    await this.sender.typingMessage(jid);
+    await this.sender.sendText(
+      jid,
+      'Desculpe, não consegui concluir sua solicitação. Pode tentar de novo?',
+    );
   }
 }

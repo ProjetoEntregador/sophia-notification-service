@@ -10,7 +10,6 @@ export const treatments = pgTable('treatments', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull(),
   jid: varchar('jid', { length: 255 }).notNull(),
-  medicineName: varchar('medicine_name', { length: 255 }).notNull(),
   intervalHours: integer('interval_hours').notNull(),
   startTime: timestamp('start_time', {
     withTimezone: true,

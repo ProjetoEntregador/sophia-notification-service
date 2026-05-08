@@ -27,11 +27,11 @@ export const MESSAGES = {
 
 export const STEPS: ReadonlyArray<TreatmentStep> = [
   {
-    prompt: () => 'Qual o nome do remédio?',
+    prompt: () => 'Qual o nome do(s) medicamento(s)?',
     process: (input) =>
       input.length === 0
         ? { kind: 'reject', reply: MESSAGES.emptyMedicine }
-        : { kind: 'advance', patch: { medicineName: input } },
+        : { kind: 'advance', patch: { medications: input.split(',') } },
   },
   {
     prompt: () => 'De quantas em quantas horas? (ex: 8)',

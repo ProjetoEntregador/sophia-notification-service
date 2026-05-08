@@ -18,6 +18,7 @@ import {
   STEPS,
   TRIGGERS,
 } from '../constansts/start-treatment.constants.js';
+import { MedicationsService } from '../../../modules/medications/medications.service.js';
 
 @Injectable()
 export class StartTreatmentHandler extends MessageHandlerInterface {
@@ -25,6 +26,7 @@ export class StartTreatmentHandler extends MessageHandlerInterface {
 
   constructor(
     private readonly treatments: TreatmentsService,
+    private readonly medications: MedicationsService,
     private readonly state: ConversationStateService,
     private readonly sender: MessageSenderInterface,
   ) {
@@ -114,13 +116,30 @@ export class StartTreatmentHandler extends MessageHandlerInterface {
   }
 
   private async persist(jid: string, draft: TreatmentDraft): Promise<void> {
+    const medicationsIds: string[] = [];
+
+    if (draft.medications) {
+      for (const medicationName of draft.medications) {
+        const medication = await this.medications.getMedicationsByName(
+          medicationName,
+          jid,
+        );
+
+        if (medication.length != 1) {
+          console.log('Erro: É preciso definir qual a medicação a ser tomada.');
+        } else {
+          medicationsIds.push(medication[0].id);
+        }
+      }
+    }
+
     await this.treatments.create({
       userId: jidToUserId(jid),
       jid,
-      medicineName: draft.medicineName as string,
       intervalHours: draft.intervalHours as number,
       startTime: draft.startTime as string,
       endTime: draft.endTime as string,
+      medicationsIds,
     });
   }
 }

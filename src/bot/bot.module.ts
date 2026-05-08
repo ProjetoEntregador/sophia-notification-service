@@ -17,12 +17,14 @@ import { SkipDoseHandler } from './messaging/handlers/skip-dose.handler.js';
 import { StartTreatmentHandler } from './messaging/handlers/start-treatment.handler.js';
 import { RemindersModule } from '../modules/reminders/reminders.module.js';
 import { TreatmentsModule } from '../modules/treatments/treatments.module.js';
+import { MedicationsModule } from '../modules/medications/medications.module.js';
 import { MessageRouter } from './messaging/message-router.service.js';
 import { StaticMessageHandlerRegistry } from './messaging/static-message-handler-registry.js';
 import { ConversationStateService } from './messaging/state/conversation-state.service.js';
 import { AiOrchestratorHandler } from './ai/ai-orchestrator.handler.js';
 import { ChatHistoryService } from './ai/chat-history.service.js';
 import { AiToolsRegistry } from './ai/ai-tools.registry.js';
+import { RegisterMedicationTool } from './ai/tools/register-medication.tool.js';
 import { RegisterTreatmentTool } from './ai/tools/register-treatment.tool.js';
 import { ConfirmDoseTool } from './ai/tools/confirm-dose.tool.js';
 import { SkipDoseTool } from './ai/tools/skip-dose.tool.js';
@@ -30,7 +32,7 @@ import { LocalAiService } from './ai/local-ai.service.js';
 import { AiServiceInterface } from './ai/interfaces/index.js';
 
 @Module({
-  imports: [RemindersModule, TreatmentsModule],
+  imports: [RemindersModule, TreatmentsModule, MedicationsModule],
   controllers: [BotController],
   providers: [
     WhatsAppConnectionService,
@@ -44,6 +46,7 @@ import { AiServiceInterface } from './ai/interfaces/index.js';
     StartTreatmentHandler,
 
     ChatHistoryService,
+    RegisterMedicationTool,
     RegisterTreatmentTool,
     ConfirmDoseTool,
     SkipDoseTool,
