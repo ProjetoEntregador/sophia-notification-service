@@ -1,6 +1,18 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { and, asc, eq, gte, isNull, lte } from 'drizzle-orm';
-import { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import {
+  and,
+  asc,
+  eq,
+  ExtractTablesWithRelations,
+  gte,
+  isNull,
+  lte,
+  not,
+} from 'drizzle-orm';
+import {
+  NodePgDatabase,
+  NodePgQueryResultHKT,
+} from 'drizzle-orm/node-postgres';
 import { DRIZZLE } from '../../database.module';
 import { reminders } from '../../db/schema/reminders';
 import { treatments } from '../../db/schema/treatments';
@@ -11,6 +23,7 @@ import {
   UpdateReminderInput,
 } from '../../@types';
 import { toDate } from '../../utils/functions';
+import { PgTransaction } from 'drizzle-orm/pg-core';
 
 @Injectable()
 export class RemindersService {
@@ -68,26 +81,51 @@ export class RemindersService {
       .where(eq(reminders.id, id))
       .returning();
 
-    await this.db
-      .update(treatments)
-      .set({
-        endTime: new Date(treatments.endTime._.data.getTime() + delay),
-      })
-      .where(eq(treatments.id, reminder.treatmentId));
+    await this.delayTreatment(reminder.treatmentId, delay);
   }
 
   async confirmReminder(id: string): Promise<void> {
-    await this.db
-      .update(reminders)
-      .set({ confirmed: true, confirmedAt: new Date() })
-      .where(eq(reminders.id, id));
+    await this.db.transaction(async (tx) => {
+      const [reminder] = await tx
+        .select()
+        .from(reminders)
+        .where(and(eq(reminders.id, id), not(eq(reminders.confirmed, true))));
+
+      if (!reminder) {
+        throw new NotFoundException('No such reminder found.');
+      }
+
+      let reminderData = {};
+      if (reminder.confirmed == false) {
+        reminderData = { confirmedAt: new Date() };
+      } else {
+        reminderData = { confirmed: true, confirmedAt: new Date() };
+      }
+
+      const [newReminder] = await tx
+        .update(reminders)
+        .set(reminderData)
+        .where(eq(reminders.id, id))
+        .returning();
+
+      await this.createNextTreatmentReminder(newReminder, tx);
+    });
   }
 
   async skipReminder(id: string): Promise<void> {
-    await this.db
-      .update(reminders)
-      .set({ confirmed: false, confirmedAt: new Date() })
-      .where(eq(reminders.id, id));
+    await this.db.transaction(async (tx) => {
+      const [reminder] = await tx
+        .update(reminders)
+        .set({ confirmed: false, confirmedAt: new Date() })
+        .where(and(eq(reminders.id, id), isNull(reminders.confirmed)))
+        .returning();
+
+      if (!reminder) {
+        throw new NotFoundException('No such reminder found.');
+      }
+
+      await this.createNextTreatmentReminder(reminder, tx);
+    });
   }
 
   async getRemindersInBetweenDates(
@@ -165,5 +203,58 @@ export class RemindersService {
       confirmed: input.confirmed,
       confirmedAt: toDate(input.confirmedAt),
     };
+  }
+
+  private async createNextTreatmentReminder(
+    reminder: Reminder,
+    tx: PgTransaction<
+      NodePgQueryResultHKT,
+      Record<string, never>,
+      ExtractTablesWithRelations<Record<string, never>>
+    >,
+  ) {
+    const [treatment] = await tx
+      .select()
+      .from(treatments)
+      .where(eq(treatments.id, reminder.treatmentId));
+
+    if (!treatment) {
+      throw new NotFoundException('Reminder is not related to any treatment.');
+    }
+
+    /**
+      confirmedAt will always be a Date since this function can only
+      be called after the reminder has been confimed or skipped
+    **/
+    const nextScheduledTime = new Date(reminder.confirmedAt as Date);
+
+    nextScheduledTime.setHours(
+      nextScheduledTime.getHours() + treatment.intervalHours,
+    );
+
+    const isScheduledTimePastTreatmentEnd =
+      nextScheduledTime > treatment.endTime;
+    if (isScheduledTimePastTreatmentEnd) {
+      const delay = nextScheduledTime.getTime() - treatment.endTime.getTime();
+      await this.delayTreatment(reminder.treatmentId, delay);
+    }
+
+    await tx.insert(reminders).values({
+      treatmentId: treatment.id,
+      scheduledTime: nextScheduledTime,
+      sent: false,
+      sentAt: null,
+      confirmed: null,
+      confirmedAt: null,
+    });
+  }
+
+  private async delayTreatment(treatmentId: string, delay: number) {
+    await this.db
+      .update(treatments)
+      .set({
+        endTime: new Date(treatments.endTime._.data.getTime() + delay),
+      })
+      .where(eq(treatments.id, treatmentId));
   }
 }
