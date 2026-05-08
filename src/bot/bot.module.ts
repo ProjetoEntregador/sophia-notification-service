@@ -24,6 +24,7 @@ import { ConversationStateService } from './messaging/state/conversation-state.s
 import { AiOrchestratorHandler } from './ai/ai-orchestrator.handler.js';
 import { ChatHistoryService } from './ai/chat-history.service.js';
 import { AiToolsRegistry } from './ai/ai-tools.registry.js';
+import { RegisterMedicationTool } from './ai/tools/register-medication.tool.js';
 import { RegisterTreatmentTool } from './ai/tools/register-treatment.tool.js';
 import { ConfirmDoseTool } from './ai/tools/confirm-dose.tool.js';
 import { SkipDoseTool } from './ai/tools/skip-dose.tool.js';
@@ -45,6 +46,7 @@ import { AiServiceInterface } from './ai/interfaces/index.js';
     StartTreatmentHandler,
 
     ChatHistoryService,
+    RegisterMedicationTool,
     RegisterTreatmentTool,
     ConfirmDoseTool,
     SkipDoseTool,

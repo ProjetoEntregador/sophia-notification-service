@@ -1,5 +1,5 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { eq, ilike } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DRIZZLE } from '../../database.module';
 import {
@@ -65,12 +65,17 @@ export class MedicationsService {
     await this.treatmentsToMedication.removeManyByForeignId('medicationId', id);
   }
 
-  async getMedicationsByName(name: string): Promise<Medication[]> {
+  async getMedicationsByName(name: string, jid: string): Promise<Medication[]> {
     const rows = await this.db
       .select()
       .from(medications)
-      .where(ilike(medications.name, `%${name}%`));
-    return rows;
+      .where(eq(medications.jid, jid));
+
+    const needle = name.trim().toLowerCase();
+    return rows.filter((row) => {
+      const dbName = row.name.trim().toLowerCase();
+      return dbName.includes(needle) || needle.includes(dbName);
+    });
   }
 
   async getMedicationUntilDate(

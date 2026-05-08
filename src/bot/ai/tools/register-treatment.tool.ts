@@ -9,7 +9,8 @@ type RegisterTreatmentArgs = {
   medications: string[];
   intervalHours: number;
   startTime: string;
-  endTime: string;
+  endTime?: string;
+  durationDays?: number;
 };
 
 @Injectable()
@@ -17,7 +18,7 @@ export class RegisterTreatmentTool extends AiToolInterface {
   readonly definition: AiToolDefinition = {
     name: 'register_treatment',
     description:
-      'Cadastra um novo tratamento medicamentoso para o paciente. Use quando o usuário pedir para cadastrar/iniciar um tratamento.',
+      'Cadastra um novo tratamento medicamentoso para o paciente. Use quando o usuário pedir para cadastrar/iniciar um tratamento. Forneça endTime OU durationDays — não ambos.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -40,10 +41,17 @@ export class RegisterTreatmentTool extends AiToolInterface {
         endTime: {
           type: 'string',
           description:
-            'Data e hora de término do tratamento em ISO 8601 (ex: 2026-05-11T11:00:00Z).',
+            'Data e hora de término em ISO 8601. Use SOMENTE se o usuário informou a data/hora final explicitamente.',
+        },
+        durationDays: {
+          type: 'integer',
+          minimum: 1,
+          maximum: 365,
+          description:
+            'Duração do tratamento em dias. Use quando o usuário disser "durante N dias" / "por N dias" / "1 semana" (= 7) etc., em vez de endTime.',
         },
       },
-      required: ['medications', 'intervalHours', 'startTime', 'endTime'],
+      required: ['medications', 'intervalHours', 'startTime'],
     },
   };
 
@@ -58,26 +66,50 @@ export class RegisterTreatmentTool extends AiToolInterface {
     const input = args as RegisterTreatmentArgs;
 
     const start = new Date(input.startTime);
-    const end = new Date(input.endTime);
-    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-      return 'Erro: startTime ou endTime não estão em formato ISO 8601 válido.';
+    if (Number.isNaN(start.getTime())) {
+      return 'Erro: startTime não está em formato ISO 8601 válido.';
     }
+
+    let end: Date;
+    if (input.endTime) {
+      end = new Date(input.endTime);
+      if (Number.isNaN(end.getTime())) {
+        return 'Erro: endTime não está em formato ISO 8601 válido.';
+      }
+    } else if (
+      typeof input.durationDays === 'number' &&
+      input.durationDays > 0
+    ) {
+      end = new Date(
+        start.getTime() + input.durationDays * 24 * 60 * 60 * 1000,
+      );
+    } else {
+      return 'Erro: forneça endTime (ISO 8601) ou durationDays (inteiro positivo).';
+    }
+
     if (end <= start) {
-      return 'Erro: endTime precisa ser posterior a startTime.';
+      return 'Erro: o término precisa ser posterior ao início.';
     }
 
     try {
       const medicationsId: string[] = [];
 
       for (const medicationName of input.medications) {
-        const medication =
-          await this.medications.getMedicationsByName(medicationName);
+        const matches = await this.medications.getMedicationsByName(
+          medicationName,
+          jid,
+        );
 
-        if (medication.length != 1) {
-          return 'Erro: É preciso definir qual a medicação a ser tomada.';
-        } else {
-          medicationsId.push(medication[0].id);
+        if (matches.length === 0) {
+          return `Erro: o medicamento "${medicationName}" não está cadastrado. Cadastre-o primeiro com a ferramenta register_medication antes de iniciar o tratamento.`;
         }
+
+        const exact = matches.find(
+          (m) =>
+            m.name.trim().toLowerCase() === medicationName.trim().toLowerCase(),
+        );
+        const chosen = exact ?? matches[0];
+        medicationsId.push(chosen.id);
       }
 
       const treatment = await this.treatments.create({

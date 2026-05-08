@@ -68,6 +68,7 @@ export class WhatsAppSessionService {
 
       const text =
         msg.message.conversation ?? msg.message.extendedTextMessage?.text;
+
       if (!text) return;
 
       void this.router.route(from, text);

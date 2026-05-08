@@ -120,8 +120,10 @@ export class StartTreatmentHandler extends MessageHandlerInterface {
 
     if (draft.medications) {
       for (const medicationName of draft.medications) {
-        const medication =
-          await this.medications.getMedicationsByName(medicationName);
+        const medication = await this.medications.getMedicationsByName(
+          medicationName,
+          jid,
+        );
 
         if (medication.length != 1) {
           console.log('Erro: É preciso definir qual a medicação a ser tomada.');
