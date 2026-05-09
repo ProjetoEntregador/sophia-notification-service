@@ -30,6 +30,7 @@ import { ConfirmDoseTool } from './ai/tools/confirm-dose.tool.js';
 import { SkipDoseTool } from './ai/tools/skip-dose.tool.js';
 import { LocalAiService } from './ai/local-ai.service.js';
 import { AiServiceInterface } from './ai/interfaces/index.js';
+import { RemindersDispatchCron } from './cron/reminders-dispatch.cron.js';
 
 @Module({
   imports: [RemindersModule, TreatmentsModule, MedicationsModule],
@@ -53,6 +54,7 @@ import { AiServiceInterface } from './ai/interfaces/index.js';
     AiToolsRegistry,
     AiOrchestratorHandler,
     LocalAiService,
+    RemindersDispatchCron,
     { provide: AiServiceInterface, useExisting: LocalAiService },
 
     StaticMessageHandlerRegistry,

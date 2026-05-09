@@ -2,10 +2,12 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import {
   and,
   asc,
+  desc,
   eq,
   ExtractTablesWithRelations,
   gte,
   isNull,
+  lt,
   lte,
   not,
 } from 'drizzle-orm';
@@ -16,6 +18,8 @@ import {
 import { DRIZZLE } from '../../database.module';
 import { reminders } from '../../db/schema/reminders';
 import { treatments } from '../../db/schema/treatments';
+import { medications } from '../../db/schema/medications';
+import { treatmentsToMedications } from '../../db/schema/treatmentsToMedications';
 import {
   CreateReminderInput,
   NewReminder,
@@ -153,6 +157,114 @@ export class RemindersService {
     return this.resolvePending(jid, false);
   }
 
+  async createInitialReminder(
+    treatmentId: string,
+    scheduledTime: Date,
+  ): Promise<Reminder> {
+    const [row] = await this.db
+      .insert(reminders)
+      .values({
+        treatmentId,
+        scheduledTime,
+        sent: false,
+        sentAt: null,
+        confirmed: null,
+        confirmedAt: null,
+      })
+      .returning();
+    return row;
+  }
+
+  async findDueReminders(now: Date = new Date()): Promise<
+    Array<{
+      reminderId: string;
+      jid: string;
+      medicationNames: string[];
+      previousSkipped: boolean;
+    }>
+  > {
+    const rows = await this.db
+      .select({
+        reminderId: reminders.id,
+        treatmentId: reminders.treatmentId,
+        scheduledTime: reminders.scheduledTime,
+        jid: treatments.jid,
+        medicationName: medications.name,
+      })
+      .from(reminders)
+      .innerJoin(treatments, eq(treatments.id, reminders.treatmentId))
+      .innerJoin(
+        treatmentsToMedications,
+        eq(treatmentsToMedications.treatmentId, treatments.id),
+      )
+      .innerJoin(
+        medications,
+        eq(medications.id, treatmentsToMedications.medicationId),
+      )
+      .where(and(lte(reminders.scheduledTime, now), eq(reminders.sent, false)));
+
+    const grouped = new Map<
+      string,
+      {
+        jid: string;
+        medicationNames: string[];
+        treatmentId: string;
+        scheduledTime: Date;
+      }
+    >();
+    for (const r of rows) {
+      const existing = grouped.get(r.reminderId);
+      if (existing) {
+        existing.medicationNames.push(r.medicationName);
+      } else {
+        grouped.set(r.reminderId, {
+          jid: r.jid,
+          medicationNames: [r.medicationName],
+          treatmentId: r.treatmentId,
+          scheduledTime: r.scheduledTime,
+        });
+      }
+    }
+
+    return Promise.all(
+      Array.from(grouped.entries()).map(async ([reminderId, data]) => ({
+        reminderId,
+        jid: data.jid,
+        medicationNames: data.medicationNames,
+        previousSkipped: await this.wasPreviousReminderSkipped(
+          data.treatmentId,
+          data.scheduledTime,
+        ),
+      })),
+    );
+  }
+
+  private async wasPreviousReminderSkipped(
+    treatmentId: string,
+    scheduledTime: Date,
+  ): Promise<boolean> {
+    const [prev] = await this.db
+      .select({ confirmed: reminders.confirmed })
+      .from(reminders)
+      .where(
+        and(
+          eq(reminders.treatmentId, treatmentId),
+          lt(reminders.scheduledTime, scheduledTime),
+        ),
+      )
+      .orderBy(desc(reminders.scheduledTime))
+      .limit(1);
+
+    return prev?.confirmed === false;
+  }
+
+  async markSent(reminderId: string, sentAt: Date = new Date()): Promise<void> {
+    await this.db
+      .update(reminders)
+      .set({ sent: true, sentAt })
+      .where(eq(reminders.id, reminderId));
+  }
+
   async findAllForDay(day: Date): Promise<Reminder[]> {
     const startOfTheDay = new Date(day);
     startOfTheDay.setHours(0, 0, 0, 0);
@@ -177,21 +289,52 @@ export class RemindersService {
     _jid: string,
     confirmed: boolean,
   ): Promise<Reminder | null> {
-    const [pending] = await this.db
-      .select()
+    return this.db.transaction(async (tx) => {
+      const [pending] = await tx
+        .select()
+        .from(reminders)
+        .where(and(eq(reminders.sent, true), isNull(reminders.confirmed)))
+        .orderBy(asc(reminders.sentAt))
+        .limit(1);
+
+      if (!pending) return null;
+
+      const [row] = await tx
+        .update(reminders)
+        .set({ confirmed, confirmedAt: new Date() })
+        .where(eq(reminders.id, pending.id))
+        .returning();
+
+      await this.createNextTreatmentReminder(row, tx);
+      return row;
+    });
+  }
+
+  async autoSkipExpired(graceMinutes: number): Promise<string[]> {
+    const cutoff = new Date(Date.now() - graceMinutes * 60 * 1000);
+
+    const expired = await this.db
+      .select({ id: reminders.id })
       .from(reminders)
-      .where(and(eq(reminders.sent, true), isNull(reminders.confirmed)))
-      .orderBy(asc(reminders.sentAt))
-      .limit(1);
+      .where(
+        and(
+          eq(reminders.sent, true),
+          isNull(reminders.confirmed),
+          lte(reminders.sentAt, cutoff),
+        ),
+      );
 
-    if (!pending) return null;
-
-    const [row] = await this.db
-      .update(reminders)
-      .set({ confirmed, confirmedAt: new Date() })
-      .where(eq(reminders.id, pending.id))
-      .returning();
-    return row;
+    const skipped: string[] = [];
+    for (const { id } of expired) {
+      try {
+        await this.skipReminder(id);
+        skipped.push(id);
+      } catch (err) {
+        if (err instanceof NotFoundException) continue;
+        throw err;
+      }
+    }
+    return skipped;
   }
 
   private toValues(input: Partial<CreateReminderInput>): Partial<NewReminder> {
