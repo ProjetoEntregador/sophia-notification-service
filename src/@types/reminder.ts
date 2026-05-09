@@ -34,3 +34,25 @@ export type RemindersInBetween = {
   start: Date;
   end: Date;
 };
+
+export type DueReminder = {
+  reminderId: string;
+  jid: string;
+  medicationNames: string[];
+  previousSkipped: boolean;
+};
+
+export type GroupedDueReminderInterface = {
+  jid: string;
+  medicationNames: string[];
+  treatmentId: string;
+  scheduledTime: Date;
+};
+
+export type DueReminderRow = {
+  reminderId: string;
+  treatmentId: string;
+  scheduledTime: Date;
+  jid: string;
+  medicationName: string;
+};

@@ -10,12 +10,14 @@ import {
   UpdateTreatmentInput,
 } from '../../@types';
 import { TreatmentsToMedicationService } from '../treatmentsToMedication/treatmentsToMedication.service';
+import { RemindersService } from '../reminders/reminders.service';
 
 @Injectable()
 export class TreatmentsService {
   constructor(
     @Inject(DRIZZLE) private readonly db: NodePgDatabase,
     private readonly treatmentsToMedication: TreatmentsToMedicationService,
+    private readonly reminders: RemindersService,
   ) {}
 
   findAll(): Promise<Treatment[]> {
@@ -44,6 +46,8 @@ export class TreatmentsService {
     );
 
     await this.treatmentsToMedication.createMany(treatmentsToMedicationsData);
+
+    await this.reminders.createInitialReminder(row.id, row.startTime);
 
     return row;
   }
