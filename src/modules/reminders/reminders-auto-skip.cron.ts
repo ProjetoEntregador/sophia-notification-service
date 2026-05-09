@@ -2,8 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { RemindersService } from './reminders.service';
 
-const REMINDER_GRACE_MINUTES = 5;
-// const REMINDER_GRACE_MINUTES = 30;
+const REMINDER_GRACE_MINUTES = 30;
 
 @Injectable()
 export class RemindersAutoSkipCron {

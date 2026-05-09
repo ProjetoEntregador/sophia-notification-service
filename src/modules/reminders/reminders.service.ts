@@ -22,6 +22,9 @@ import { medications } from '../../db/schema/medications';
 import { treatmentsToMedications } from '../../db/schema/treatmentsToMedications';
 import {
   CreateReminderInput,
+  DueReminder,
+  DueReminderRow,
+  GroupedDueReminderInterface,
   NewReminder,
   Reminder,
   UpdateReminderInput,
@@ -175,14 +178,7 @@ export class RemindersService {
     return row;
   }
 
-  async findDueReminders(now: Date = new Date()): Promise<
-    Array<{
-      reminderId: string;
-      jid: string;
-      medicationNames: string[];
-      previousSkipped: boolean;
-    }>
-  > {
+  async findDueReminders(now: Date = new Date()): Promise<DueReminder[]> {
     const rows = await this.db
       .select({
         reminderId: reminders.id,
@@ -201,30 +197,10 @@ export class RemindersService {
         medications,
         eq(medications.id, treatmentsToMedications.medicationId),
       )
-      .where(and(lte(reminders.scheduledTime, now), eq(reminders.sent, false)));
+      .where(and(lte(reminders.scheduledTime, now), eq(reminders.sent, false)))
+      .orderBy(asc(reminders.scheduledTime));
 
-    const grouped = new Map<
-      string,
-      {
-        jid: string;
-        medicationNames: string[];
-        treatmentId: string;
-        scheduledTime: Date;
-      }
-    >();
-    for (const r of rows) {
-      const existing = grouped.get(r.reminderId);
-      if (existing) {
-        existing.medicationNames.push(r.medicationName);
-      } else {
-        grouped.set(r.reminderId, {
-          jid: r.jid,
-          medicationNames: [r.medicationName],
-          treatmentId: r.treatmentId,
-          scheduledTime: r.scheduledTime,
-        });
-      }
-    }
+    const grouped = this.groupDueRowsByReminder(rows);
 
     return Promise.all(
       Array.from(grouped.entries()).map(async ([reminderId, data]) => ({
@@ -256,6 +232,28 @@ export class RemindersService {
       .limit(1);
 
     return prev?.confirmed === false;
+  }
+
+  private groupDueRowsByReminder(
+    rows: DueReminderRow[],
+  ): Map<string, GroupedDueReminderInterface> {
+    const grouped = new Map<string, GroupedDueReminderInterface>();
+
+    for (const r of rows) {
+      const existing = grouped.get(r.reminderId);
+      if (existing) {
+        existing.medicationNames.push(r.medicationName);
+      } else {
+        grouped.set(r.reminderId, {
+          jid: r.jid,
+          medicationNames: [r.medicationName],
+          treatmentId: r.treatmentId,
+          scheduledTime: r.scheduledTime,
+        });
+      }
+    }
+
+    return grouped;
   }
 
   async markSent(reminderId: string, sentAt: Date = new Date()): Promise<void> {
