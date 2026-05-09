@@ -6,7 +6,7 @@ export type NewReminder = InferInsertModel<typeof reminders>;
 
 export type CreateReminderInput = {
   treatmentId: string;
-  scheduledTime: string;
+  scheduledTime: string | Date;
   sent?: boolean;
   sentAt?: string | null;
   confirmed?: boolean | null;

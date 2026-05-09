@@ -9,7 +9,6 @@ import {
   isNull,
   lt,
   lte,
-  not,
 } from 'drizzle-orm';
 import {
   NodePgDatabase,
@@ -36,8 +35,8 @@ import { PgTransaction } from 'drizzle-orm/pg-core';
 export class RemindersService {
   constructor(@Inject(DRIZZLE) private readonly db: NodePgDatabase) {}
 
-  findAll(): Promise<Reminder[]> {
-    return this.db.select().from(reminders);
+  async findAll(): Promise<Reminder[]> {
+    return await this.db.select().from(reminders);
   }
 
   async findOne(id: string): Promise<Reminder> {
@@ -91,35 +90,7 @@ export class RemindersService {
     await this.delayTreatment(reminder.treatmentId, delay);
   }
 
-  async confirmReminder(id: string): Promise<void> {
-    await this.db.transaction(async (tx) => {
-      const [reminder] = await tx
-        .select()
-        .from(reminders)
-        .where(and(eq(reminders.id, id), not(eq(reminders.confirmed, true))));
-
-      if (!reminder) {
-        throw new NotFoundException('No such reminder found.');
-      }
-
-      let reminderData = {};
-      if (reminder.confirmed == false) {
-        reminderData = { confirmedAt: new Date() };
-      } else {
-        reminderData = { confirmed: true, confirmedAt: new Date() };
-      }
-
-      const [newReminder] = await tx
-        .update(reminders)
-        .set(reminderData)
-        .where(eq(reminders.id, id))
-        .returning();
-
-      await this.createNextTreatmentReminder(newReminder, tx);
-    });
-  }
-
-  async skipReminder(id: string): Promise<void> {
+  private async skipReminder(id: string): Promise<void> {
     await this.db.transaction(async (tx) => {
       const [reminder] = await tx
         .update(reminders)
@@ -158,24 +129,6 @@ export class RemindersService {
 
   async skipDose(jid: string): Promise<Reminder | null> {
     return this.resolvePending(jid, false);
-  }
-
-  async createInitialReminder(
-    treatmentId: string,
-    scheduledTime: Date,
-  ): Promise<Reminder> {
-    const [row] = await this.db
-      .insert(reminders)
-      .values({
-        treatmentId,
-        scheduledTime,
-        sent: false,
-        sentAt: null,
-        confirmed: null,
-        confirmedAt: null,
-      })
-      .returning();
-    return row;
   }
 
   async findDueReminders(now: Date = new Date()): Promise<DueReminder[]> {
@@ -336,9 +289,14 @@ export class RemindersService {
   }
 
   private toValues(input: Partial<CreateReminderInput>): Partial<NewReminder> {
+    const scheduledTime =
+      typeof input.scheduledTime == 'string'
+        ? toDate(input.scheduledTime)
+        : input.scheduledTime;
+
     return {
       treatmentId: input.treatmentId,
-      scheduledTime: toDate(input.scheduledTime) ?? undefined,
+      scheduledTime: scheduledTime ?? undefined,
       sent: input.sent,
       sentAt: toDate(input.sentAt),
       confirmed: input.confirmed,

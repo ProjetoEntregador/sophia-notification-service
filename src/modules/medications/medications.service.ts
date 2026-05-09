@@ -22,8 +22,8 @@ export class MedicationsService {
     private readonly treatmentsToMedication: TreatmentsToMedicationService,
   ) {}
 
-  findAll(): Promise<Medication[]> {
-    return this.db.select().from(medications);
+  async findAll(): Promise<Medication[]> {
+    return await this.db.select().from(medications);
   }
 
   async findOne(id: string): Promise<Medication> {

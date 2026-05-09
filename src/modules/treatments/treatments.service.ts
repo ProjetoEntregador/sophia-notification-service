@@ -20,8 +20,8 @@ export class TreatmentsService {
     private readonly reminders: RemindersService,
   ) {}
 
-  findAll(): Promise<Treatment[]> {
-    return this.db.select().from(treatments);
+  async findAll(): Promise<Treatment[]> {
+    return await this.db.select().from(treatments);
   }
 
   async findOne(id: string): Promise<Treatment> {
@@ -47,7 +47,14 @@ export class TreatmentsService {
 
     await this.treatmentsToMedication.createMany(treatmentsToMedicationsData);
 
-    await this.reminders.createInitialReminder(row.id, row.startTime);
+    await this.reminders.create({
+      treatmentId: row.id,
+      scheduledTime: row.startTime,
+      sent: false,
+      sentAt: null,
+      confirmed: null,
+      confirmedAt: null,
+    });
 
     return row;
   }
@@ -58,6 +65,7 @@ export class TreatmentsService {
       .set(this.toValues(input))
       .where(eq(treatments.id, id))
       .returning();
+
     if (!row) throw new NotFoundException(`Treatment ${id} not found`);
 
     if (input.medicationsIds) {
