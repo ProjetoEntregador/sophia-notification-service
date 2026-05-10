@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { MessageHandlerInterface } from '../../../../bot/interfaces/index.js';
-import { MessageSender } from '../../../../shared/ports/message-sender.port';
-import { RegisterTreatmentUseCase } from '../../../application/use-cases/register-treatment.usecase';
-import { ConversationStateService } from '../../../../bot/messaging/state/conversation-state.service.js';
-import { jidToUserId } from '../../../../utils/functions.js';
-import { ConversationState } from '../../../../@types';
+import { ConversationState } from '@/@types';
+import { jidToUserId } from '@/utils/functions';
+import { MessageSender } from '@/shared/ports/message-sender.port';
+import { MessageHandlerInterface } from '@/bot/interfaces/index';
+import { ConversationStateService } from '@/bot/messaging/state/conversation-state.service';
+import { RegisterTreatmentUseCase } from '@/treatments/application/use-cases/register-treatment.usecase';
+import { FindMedicationByNameUseCase } from '@/medications/application/use-cases/find-medication-by-name.usecase';
 import {
   TreatmentDraft,
   TreatmentStepResult,
@@ -16,7 +17,6 @@ import {
   STEPS,
   TRIGGERS,
 } from './constants/start-treatment.constants';
-import { FindMedicationByNameUseCase } from '../../../../medications/application/use-cases/find-medication-by-name.usecase';
 
 @Injectable()
 export class StartTreatmentHandler extends MessageHandlerInterface {

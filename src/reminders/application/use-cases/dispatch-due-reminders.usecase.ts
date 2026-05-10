@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { RemindersRepository } from '../../domain/reminders.repository.port';
-import { MessageSender } from '../../../shared/ports/message-sender.port';
-import { Clock } from '../../../shared/ports/clock.port';
+import { Clock } from '@/shared/ports/clock.port';
+import { MessageSender } from '@/shared/ports/message-sender.port';
+import { RemindersRepository } from '@/reminders/domain/reminders.repository.port';
 
 @Injectable()
 export class DispatchDueRemindersUseCase {

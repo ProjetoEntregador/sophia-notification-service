@@ -1,11 +1,11 @@
-import { Inject, Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
+import { Inject, Injectable } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { DATABASE } from '../../../db/database.module';
+import { DATABASE } from '@/db/database.module';
 import { treatments } from './treatment.schema';
+import { Treatment } from '@/treatments/domain/treatment.entity';
 import { treatmentsToMedications } from './treatment-medication-link.schema';
-import { Treatment } from '../../domain/treatment.entity';
-import { TreatmentsRepository } from '../../domain/treatment.repository.port';
+import { TreatmentsRepository } from '@/treatments/domain/treatment.repository.port';
 
 type TreatmentRow = typeof treatments.$inferSelect;
 

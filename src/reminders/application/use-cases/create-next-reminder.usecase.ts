@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { Reminder } from '../../domain/reminder.entity';
-import { RemindersRepository } from '../../domain/reminders.repository.port';
-import { TreatmentsRepository } from '../../../treatments/domain/treatment.repository.port';
+import { Reminder } from '@/reminders/domain/reminder.entity';
+import { RemindersRepository } from '@/reminders/domain/reminders.repository.port';
+import { TreatmentsRepository } from '@/treatments/domain/treatment.repository.port';
 
 @Injectable()
 export class CreateNextReminderUseCase {

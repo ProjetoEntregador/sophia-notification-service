@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { TreatmentsRepository } from '../../domain/treatment.repository.port';
+import { TreatmentsRepository } from '@/treatments/domain/treatment.repository.port';
 
 @Injectable()
 export class DeleteTreatmentUseCase {

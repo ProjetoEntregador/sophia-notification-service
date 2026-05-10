@@ -1,9 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { Treatment } from '../../domain/treatment.entity';
-import { TreatmentsRepository } from '../../domain/treatment.repository.port';
-import { CreateInitialReminderUseCase } from '../../../reminders/application/use-cases/create-initial-reminder.usecase';
 import { CreateTreatmentInput } from '../dtos/treatment.input';
+import { Treatment } from '@/treatments/domain/treatment.entity';
+import { TreatmentsRepository } from '@/treatments/domain/treatment.repository.port';
+import { CreateInitialReminderUseCase } from '@/reminders/application/use-cases/create-initial-reminder.usecase';
 
 @Injectable()
 export class RegisterTreatmentUseCase {

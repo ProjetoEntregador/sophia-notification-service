@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { RemindersRepository } from '../../domain/reminders.repository.port';
-import { Clock } from '../../../shared/ports/clock.port';
+import { Clock } from '@/shared/ports/clock.port';
 import { CreateNextReminderUseCase } from './create-next-reminder.usecase';
+import { RemindersRepository } from '@/reminders/domain/reminders.repository.port';
 
 @Injectable()
 export class AutoSkipExpiredRemindersUseCase {
   constructor(
-    private readonly reminders: RemindersRepository,
     private readonly clock: Clock,
+    private readonly reminders: RemindersRepository,
     private readonly createNextReminder: CreateNextReminderUseCase,
   ) {}
 

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { AiToolDefinition } from '../../../../@types';
-import { jidToUserId } from '../../../../utils/functions.js';
-import { AiToolInterface } from '../../../../bot/ai/interfaces/index.js';
-import { RegisterMedicationUseCase } from '../../../application/use-cases/register-medication.usecase';
+import { AiToolDefinition } from '@/@types';
+import { jidToUserId } from '@/utils/functions';
+import { AiToolInterface } from '@/bot/ai/interfaces/index';
+import { RegisterMedicationUseCase } from '@/medications/application/use-cases/register-medication.usecase';
 
 type RegisterMedicationArgs = {
   name: string;

@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { WhatsAppSessionService } from './connection/whatsapp-session.service.js';
+import { WhatsAppSessionService } from './connection/whatsapp-session.service';
 
 @Injectable()
 export class BotService implements OnModuleInit {

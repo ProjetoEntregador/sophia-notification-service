@@ -1,15 +1,14 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, asc, desc, eq, gte, isNull, lt, lte } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { DATABASE } from '../../../db/database.module';
 import { reminders } from './reminder.schema';
-import { treatments } from '../../../db/schema/treatments';
-import { medications } from '../../../db/schema/medications';
-import { treatmentsToMedications } from '../../../treatments/adapters/out/treatment-medication-link.schema';
-import { Reminder } from '../../domain/reminder.entity';
-import { DueReminderProjection } from '../../domain/due-reminder.projection';
-import { RemindersRepository } from '../../domain/reminders.repository.port';
-
+import { DATABASE } from '@/db/database.module';
+import { treatments } from '@/db/schema/treatments';
+import { medications } from '@/db/schema/medications';
+import { Reminder } from '@/reminders/domain/reminder.entity';
+import { RemindersRepository } from '@/reminders/domain/reminders.repository.port';
+import { DueReminderProjection } from '@/reminders/domain/due-reminder.projection';
+import { treatmentsToMedications } from '@/treatments/adapters/out/treatment-medication-link.schema';
 type ReminderRow = typeof reminders.$inferSelect;
 
 type DueRow = {

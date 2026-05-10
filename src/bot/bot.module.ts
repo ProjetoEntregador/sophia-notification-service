@@ -1,28 +1,28 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { BotController } from './bot.controller.js';
-import { BotService } from './bot.service.js';
-import { WhatsAppConnectionService } from './connection/whatsapp-connection.service.js';
-import { WhatsAppSessionService } from './connection/whatsapp-session.service.js';
-import { MessageService } from './messaging/message.service.js';
-import { QrCodeTerminalPresenter } from './presenters/qr-code-terminal.presenter.js';
+import { BotController } from './bot.controller';
+import { BotService } from './bot.service';
+import { WhatsAppConnectionService } from './connection/whatsapp-connection.service';
+import { WhatsAppSessionService } from './connection/whatsapp-session.service';
+import { MessageService } from './messaging/message.service';
+import { QrCodeTerminalPresenter } from './presenters/qr-code-terminal.presenter';
 import {
   MessageHandlerRegistryInterface,
   MessageRouterInterface,
   QrCodePresenterInterface,
   SocketProviderInterface,
-} from './interfaces/index.js';
-import { RemindersModule } from '../reminders/reminders.module';
-import { TreatmentsModule } from '../treatments/treatments.module';
-import { MedicationsModule } from '../medications/medications.module';
-import { MessageRouter } from './messaging/message-router.service.js';
-import { StaticMessageHandlerRegistry } from './messaging/static-message-handler-registry.js';
-import { ConversationStateService } from './messaging/state/conversation-state.service.js';
-import { AiOrchestratorHandler } from './ai/ai-orchestrator.handler.js';
-import { ChatHistoryService } from './ai/chat-history.service.js';
-import { AiToolsRegistry } from './ai/ai-tools.registry.js';
-import { LocalAiService } from './ai/local-ai.service.js';
-import { AiServiceInterface } from './ai/interfaces/index.js';
-import { MessageSender } from '../shared/ports/message-sender.port';
+} from './interfaces/index';
+import { RemindersModule } from '@/reminders/reminders.module';
+import { TreatmentsModule } from '@/treatments/treatments.module';
+import { MedicationsModule } from '@/medications/medications.module';
+import { MessageRouter } from './messaging/message-router.service';
+import { StaticMessageHandlerRegistry } from './messaging/static-message-handler-registry';
+import { ConversationStateService } from './messaging/state/conversation-state.service';
+import { AiOrchestratorHandler } from './ai/ai-orchestrator.handler';
+import { ChatHistoryService } from './ai/chat-history.service';
+import { AiToolsRegistry } from './ai/ai-tools.registry';
+import { LocalAiService } from './ai/local-ai.service';
+import { AiServiceInterface } from './ai/interfaces/index';
+import { MessageSender } from '@/shared/ports/message-sender.port';
 
 @Module({
   imports: [

@@ -5,7 +5,7 @@ import makeWASocket, {
   WASocket,
 } from 'baileys';
 import pino from 'pino';
-import { SocketProviderInterface } from '../interfaces/index.js';
+import { SocketProviderInterface } from '../interfaces';
 
 @Injectable()
 export class WhatsAppConnectionService extends SocketProviderInterface {

@@ -1,1 +1,1 @@
-export { reminders } from '../../reminders/adapters/out/reminder.schema';
+export { reminders } from '@/reminders/adapters/out/reminder.schema';
