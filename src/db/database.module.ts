@@ -2,13 +2,13 @@ import { Module, Global } from '@nestjs/common';
 import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 
-export const DRIZZLE = 'DRIZZLE';
+export const DATABASE = 'DATABASE';
 
 @Global()
 @Module({
   providers: [
     {
-      provide: DRIZZLE,
+      provide: DATABASE,
       useFactory: () => {
         const connectionString = process.env.DATABASE_URL!;
         const pool = new Pool({ connectionString });
@@ -17,6 +17,6 @@ export const DRIZZLE = 'DRIZZLE';
       },
     },
   ],
-  exports: [DRIZZLE],
+  exports: [DATABASE],
 })
 export class DatabaseModule {}

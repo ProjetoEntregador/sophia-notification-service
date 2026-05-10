@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, asc, desc, eq, gte, isNull, lt, lte } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { DRIZZLE } from '../../../database.module';
+import { DATABASE } from '../../../db/database.module';
 import { reminders } from './reminder.schema';
 import { treatments } from '../../../db/schema/treatments';
 import { medications } from '../../../db/schema/medications';
@@ -20,9 +20,16 @@ type DueRow = {
   medicationName: string;
 };
 
+type GroupedDue = {
+  treatmentId: string;
+  scheduledTime: Date;
+  jid: string;
+  medicationNames: string[];
+};
+
 @Injectable()
 export class DrizzleRemindersRepository extends RemindersRepository {
-  constructor(@Inject(DRIZZLE) private readonly db: NodePgDatabase) {
+  constructor(@Inject(DATABASE) private readonly db: NodePgDatabase) {
     super();
   }
 
@@ -171,26 +178,12 @@ export class DrizzleRemindersRepository extends RemindersRepository {
     return prev?.confirmed === false;
   }
 
-  private groupByReminder(rows: DueRow[]): Map<
-    string,
-    {
-      treatmentId: string;
-      scheduledTime: Date;
-      jid: string;
-      medicationNames: string[];
-    }
-  > {
-    const grouped = new Map<
-      string,
-      {
-        treatmentId: string;
-        scheduledTime: Date;
-        jid: string;
-        medicationNames: string[];
-      }
-    >();
+  private groupByReminder(rows: DueRow[]): Map<string, GroupedDue> {
+    const grouped = new Map<string, GroupedDue>();
+
     for (const r of rows) {
       const existing = grouped.get(r.reminderId);
+
       if (existing) {
         existing.medicationNames.push(r.medicationName);
       } else {
