@@ -8,7 +8,6 @@ import { ListTreatmentsUseCase } from './application/use-cases/list-treatments.u
 import { RegisterTreatmentUseCase } from './application/use-cases/register-treatment.usecase';
 import { UpdateTreatmentUseCase } from './application/use-cases/update-treatment.usecase';
 import { DeleteTreatmentUseCase } from './application/use-cases/delete-treatment.usecase';
-import { TreatmentsController } from './adapters/in/treatments.controller';
 import { RegisterTreatmentTool } from './adapters/in/ai-tools/register-treatment.tool';
 import { StartTreatmentHandler } from './adapters/in/whatsapp/start-treatment.handler';
 
@@ -18,7 +17,6 @@ import { StartTreatmentHandler } from './adapters/in/whatsapp/start-treatment.ha
     MedicationsModule,
     forwardRef(() => BotModule),
   ],
-  controllers: [TreatmentsController],
   providers: [
     { provide: TreatmentsRepository, useClass: DrizzleTreatmentsRepository },
     ListTreatmentsUseCase,

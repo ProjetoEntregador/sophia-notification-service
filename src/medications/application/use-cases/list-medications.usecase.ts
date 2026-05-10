@@ -6,8 +6,8 @@ import { MedicationsRepository } from '../../domain/medications.repository.port'
 export class ListMedicationsUseCase {
   constructor(private readonly medications: MedicationsRepository) {}
 
-  findAll(): Promise<Medication[]> {
-    return this.medications.findAll();
+  async findAll(): Promise<Medication[]> {
+    return await this.medications.findAll();
   }
 
   async findOne(id: string): Promise<Medication> {
