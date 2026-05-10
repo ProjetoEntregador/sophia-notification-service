@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { eq, sql } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { DRIZZLE } from '../../../database.module';
+import { DATABASE } from '../../../db/database.module';
 import { treatments } from '../../../treatments/adapters/out/treatment.schema';
 import { reminders } from '../../../reminders/adapters/out/reminder.schema';
 import { UsersRepository } from '../../domain/users.repository.port';
@@ -9,7 +9,7 @@ import { UserOverview } from '../../domain/user-overview.type';
 
 @Injectable()
 export class DrizzleUsersRepository extends UsersRepository {
-  constructor(@Inject(DRIZZLE) private readonly db: NodePgDatabase) {
+  constructor(@Inject(DATABASE) private readonly db: NodePgDatabase) {
     super();
   }
 

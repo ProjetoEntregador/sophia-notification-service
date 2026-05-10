@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { DRIZZLE } from '../../../database.module';
+import { DATABASE } from '../../../db/database.module';
 import { treatments } from './treatment.schema';
 import { treatmentsToMedications } from './treatment-medication-link.schema';
 import { Treatment } from '../../domain/treatment.entity';
@@ -11,7 +11,7 @@ type TreatmentRow = typeof treatments.$inferSelect;
 
 @Injectable()
 export class DrizzleTreatmentsRepository extends TreatmentsRepository {
-  constructor(@Inject(DRIZZLE) private readonly db: NodePgDatabase) {
+  constructor(@Inject(DATABASE) private readonly db: NodePgDatabase) {
     super();
   }
 
