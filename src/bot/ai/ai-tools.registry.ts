@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AiToolDefinition } from '../../@types';
 import { AiToolInterface } from './interfaces/index.js';
-import { RegisterMedicationTool } from './tools/register-medication.tool.js';
-import { RegisterTreatmentTool } from './tools/register-treatment.tool.js';
-import { ConfirmDoseTool } from './tools/confirm-dose.tool.js';
-import { SkipDoseTool } from './tools/skip-dose.tool.js';
+import { RegisterMedicationTool } from '../../medications/adapters/in/ai-tools/register-medication.tool';
+import { RegisterTreatmentTool } from '../../treatments/adapters/in/ai-tools/register-treatment.tool';
+import { ConfirmDoseTool } from '../../reminders/adapters/in/ai-tools/confirm-dose.tool';
+import { SkipDoseTool } from '../../reminders/adapters/in/ai-tools/skip-dose.tool';
 
 @Injectable()
 export class AiToolsRegistry {

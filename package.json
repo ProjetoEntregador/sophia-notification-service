@@ -23,6 +23,9 @@
     "migrate": "drizzle-kit migrate --config drizzle.config.ts",
     "db:create:docker": "docker compose exec sophia_notification_service yarn db:create",
     "migrate:docker": "docker compose exec sophia_notification_service yarn migrate",
+    "docker:up": "docker compose build && docker compose up -d",
+    "docker:up:no-cache": "docker compose build --no-cache && docker compose up -d",
+    "docker:down": "docker compose down",
     "prepare": "husky"
   },
   "dependencies": {

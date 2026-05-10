@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { BotController } from './bot.controller.js';
 import { BotService } from './bot.service.js';
 import { WhatsAppConnectionService } from './connection/whatsapp-connection.service.js';
@@ -8,32 +8,28 @@ import { QrCodeTerminalPresenter } from './presenters/qr-code-terminal.presenter
 import {
   MessageHandlerRegistryInterface,
   MessageRouterInterface,
-  MessageSenderInterface,
   QrCodePresenterInterface,
   SocketProviderInterface,
 } from './interfaces/index.js';
-import { ConfirmDoseHandler } from './messaging/handlers/confirm-dose.handler.js';
-import { SkipDoseHandler } from './messaging/handlers/skip-dose.handler.js';
-import { StartTreatmentHandler } from './messaging/handlers/start-treatment.handler.js';
-import { RemindersModule } from '../modules/reminders/reminders.module.js';
-import { TreatmentsModule } from '../modules/treatments/treatments.module.js';
-import { MedicationsModule } from '../modules/medications/medications.module.js';
+import { RemindersModule } from '../reminders/reminders.module';
+import { TreatmentsModule } from '../treatments/treatments.module';
+import { MedicationsModule } from '../medications/medications.module';
 import { MessageRouter } from './messaging/message-router.service.js';
 import { StaticMessageHandlerRegistry } from './messaging/static-message-handler-registry.js';
 import { ConversationStateService } from './messaging/state/conversation-state.service.js';
 import { AiOrchestratorHandler } from './ai/ai-orchestrator.handler.js';
 import { ChatHistoryService } from './ai/chat-history.service.js';
 import { AiToolsRegistry } from './ai/ai-tools.registry.js';
-import { RegisterMedicationTool } from './ai/tools/register-medication.tool.js';
-import { RegisterTreatmentTool } from './ai/tools/register-treatment.tool.js';
-import { ConfirmDoseTool } from './ai/tools/confirm-dose.tool.js';
-import { SkipDoseTool } from './ai/tools/skip-dose.tool.js';
 import { LocalAiService } from './ai/local-ai.service.js';
 import { AiServiceInterface } from './ai/interfaces/index.js';
-import { RemindersDispatchCron } from './cron/reminders-dispatch.cron.js';
+import { MessageSender } from '../shared/ports/message-sender.port';
 
 @Module({
-  imports: [RemindersModule, TreatmentsModule, MedicationsModule],
+  imports: [
+    forwardRef(() => RemindersModule),
+    forwardRef(() => TreatmentsModule),
+    MedicationsModule,
+  ],
   controllers: [BotController],
   providers: [
     WhatsAppConnectionService,
@@ -42,19 +38,10 @@ import { RemindersDispatchCron } from './cron/reminders-dispatch.cron.js';
     MessageService,
     ConversationStateService,
 
-    ConfirmDoseHandler,
-    SkipDoseHandler,
-    StartTreatmentHandler,
-
     ChatHistoryService,
-    RegisterMedicationTool,
-    RegisterTreatmentTool,
-    ConfirmDoseTool,
-    SkipDoseTool,
     AiToolsRegistry,
     AiOrchestratorHandler,
     LocalAiService,
-    RemindersDispatchCron,
     { provide: AiServiceInterface, useExisting: LocalAiService },
 
     StaticMessageHandlerRegistry,
@@ -69,8 +56,8 @@ import { RemindersDispatchCron } from './cron/reminders-dispatch.cron.js';
       useExisting: WhatsAppConnectionService,
     },
     { provide: QrCodePresenterInterface, useClass: QrCodeTerminalPresenter },
-    { provide: MessageSenderInterface, useClass: MessageService },
+    { provide: MessageSender, useClass: MessageService },
   ],
-  exports: [WhatsAppSessionService, MessageSenderInterface],
+  exports: [WhatsAppSessionService, MessageSender, ConversationStateService],
 })
 export class BotModule {}
