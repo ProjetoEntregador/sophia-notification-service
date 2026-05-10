@@ -3,8 +3,8 @@ import { ConsumerController } from './consumer.controller';
 import { ConsumerService } from './consumer.service';
 
 @Module({
-  exports: [ConsumerService],
   controllers: [ConsumerController],
   providers: [ConsumerService],
+  exports: [ConsumerService],
 })
 export class ConsumerModule {}

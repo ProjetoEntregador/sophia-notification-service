@@ -13,17 +13,13 @@ export class ConsumerController {
   ) {
     try {
       await this.consumerService.processTask(data);
-
       const channel = context.getChannelRef();
       const originalMsg = context.getMessage();
-
       channel.ack(originalMsg);
     } catch (error) {
       console.error(error);
-
       const channel = context.getChannelRef();
       const originalMsg = context.getMessage();
-
       channel.nack(originalMsg);
     }
   }

@@ -8,9 +8,6 @@ export class PublisherController {
   @Post('publish')
   async publish(@Body() body: Record<string, unknown>) {
     await this.publisherService.publish(body);
-
-    return {
-      success: true,
-    };
+    return { success: true };
   }
 }

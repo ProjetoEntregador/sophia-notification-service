@@ -5,7 +5,7 @@ import { DRIZZLE } from '../../../database.module';
 import { reminders } from './reminder.schema';
 import { treatments } from '../../../db/schema/treatments';
 import { medications } from '../../../db/schema/medications';
-import { treatmentsToMedications } from '../../../db/schema/treatmentsToMedications';
+import { treatmentsToMedications } from '../../../treatments/adapters/out/treatment-medication-link.schema';
 import { Reminder } from '../../domain/reminder.entity';
 import { DueReminderProjection } from '../../domain/due-reminder.projection';
 import { RemindersRepository } from '../../domain/reminders.repository.port';

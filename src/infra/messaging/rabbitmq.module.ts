@@ -24,4 +24,4 @@ export const RABBITMQ_SERVICE = 'RABBITMQ_SERVICE';
   ],
   exports: [RABBITMQ_SERVICE],
 })
-export class MessageModule {}
+export class RabbitmqModule {}

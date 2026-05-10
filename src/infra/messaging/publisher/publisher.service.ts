@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { RABBITMQ_SERVICE } from 'src/message.module';
+import { RABBITMQ_SERVICE } from '../rabbitmq.module';
 
 @Injectable()
 export class PublisherService {

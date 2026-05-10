@@ -5,17 +5,17 @@ import { DatabaseModule } from './database.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { RemindersModule } from './reminders/reminders.module';
 import { TreatmentsModule } from './treatments/treatments.module';
-import { PublisherModule } from './message/publisher/publisher.module';
-import { ConsumerModule } from './message/consumer/consumer.module';
-import { MessageModule } from './message.module';
 import { MedicationsModule } from './medications/medications.module';
-import { UsersModule } from './modules/users/users.module';
+import { UsersModule } from './users/users.module';
+import { RabbitmqModule } from './infra/messaging/rabbitmq.module';
+import { PublisherModule } from './infra/messaging/publisher/publisher.module';
+import { ConsumerModule } from './infra/messaging/consumer/consumer.module';
 
 @Module({
   imports: [
     BotModule,
     DatabaseModule,
-    MessageModule,
+    RabbitmqModule,
     ScheduleModule.forRoot(),
     RemindersModule,
     TreatmentsModule,

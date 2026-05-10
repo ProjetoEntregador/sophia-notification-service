@@ -4,7 +4,7 @@ import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DRIZZLE } from '../../../database.module';
 import { medications } from './medication.schema';
 import { treatments } from '../../../db/schema/treatments';
-import { treatmentsToMedications } from '../../../db/schema/treatmentsToMedications';
+import { treatmentsToMedications } from '../../../treatments/adapters/out/treatment-medication-link.schema';
 import { Medication } from '../../domain/medication.entity';
 import { MedicationsRepository } from '../../domain/medications.repository.port';
 import { Treatment } from '../../../treatments/domain/treatment.entity';
@@ -56,7 +56,6 @@ export class DrizzleMedicationsRepository extends MedicationsRepository {
       )
       .where(eq(treatmentsToMedications.medicationId, medicationId));
 
-    // medicationIds não é usado aqui (já filtrado pelo medicationId do parâmetro).
     return rows.map(
       (r) =>
         new Treatment(

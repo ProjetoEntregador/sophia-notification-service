@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DRIZZLE } from '../../../database.module';
 import { treatments } from './treatment.schema';
-import { treatmentsToMedications } from '../../../db/schema/treatmentsToMedications';
+import { treatmentsToMedications } from './treatment-medication-link.schema';
 import { Treatment } from '../../domain/treatment.entity';
 import { TreatmentsRepository } from '../../domain/treatment.repository.port';
 
