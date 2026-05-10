@@ -6,8 +6,8 @@ import { RemindersRepository } from '../../domain/reminders.repository.port';
 export class ListRemindersUseCase {
   constructor(private readonly reminders: RemindersRepository) {}
 
-  findAll(): Promise<Reminder[]> {
-    return this.reminders.findAll();
+  async findAll(): Promise<Reminder[]> {
+    return await this.reminders.findAll();
   }
 
   async findOne(id: string): Promise<Reminder> {
