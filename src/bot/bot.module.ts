@@ -17,7 +17,7 @@ import { SkipDoseHandler } from './messaging/handlers/skip-dose.handler.js';
 import { StartTreatmentHandler } from './messaging/handlers/start-treatment.handler.js';
 import { RemindersModule } from '../reminders/reminders.module';
 import { TreatmentsModule } from '../treatments/treatments.module';
-import { MedicationsModule } from '../modules/medications/medications.module.js';
+import { MedicationsModule } from '../medications/medications.module';
 import { MessageRouter } from './messaging/message-router.service.js';
 import { StaticMessageHandlerRegistry } from './messaging/static-message-handler-registry.js';
 import { ConversationStateService } from './messaging/state/conversation-state.service.js';

@@ -18,7 +18,7 @@ import {
   STEPS,
   TRIGGERS,
 } from '../constansts/start-treatment.constants.js';
-import { MedicationsService } from '../../../modules/medications/medications.service.js';
+import { FindMedicationByNameUseCase } from '../../../medications/application/use-cases/find-medication-by-name.usecase';
 
 @Injectable()
 export class StartTreatmentHandler extends MessageHandlerInterface {
@@ -26,7 +26,7 @@ export class StartTreatmentHandler extends MessageHandlerInterface {
 
   constructor(
     private readonly registerTreatment: RegisterTreatmentUseCase,
-    private readonly medications: MedicationsService,
+    private readonly findMedication: FindMedicationByNameUseCase,
     private readonly state: ConversationStateService,
     private readonly sender: MessageSenderInterface,
   ) {
@@ -120,15 +120,12 @@ export class StartTreatmentHandler extends MessageHandlerInterface {
 
     if (draft.medications) {
       for (const medicationName of draft.medications) {
-        const medication = await this.medications.getMedicationsByName(
-          medicationName,
-          jid,
-        );
+        const matches = await this.findMedication.execute(medicationName, jid);
 
-        if (medication.length != 1) {
+        if (matches.length != 1) {
           console.log('Erro: É preciso definir qual a medicação a ser tomada.');
         } else {
-          medicationsIds.push(medication[0].id);
+          medicationsIds.push(matches[0].id);
         }
       }
     }

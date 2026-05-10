@@ -3,7 +3,7 @@ import { AiToolDefinition } from '../../../@types';
 import { RegisterTreatmentUseCase } from '../../../treatments/application/use-cases/register-treatment.usecase';
 import { jidToUserId } from '../../../utils/functions.js';
 import { AiToolInterface } from '../interfaces/index.js';
-import { MedicationsService } from 'src/modules/medications/medications.service';
+import { FindMedicationByNameUseCase } from '../../../medications/application/use-cases/find-medication-by-name.usecase';
 
 type RegisterTreatmentArgs = {
   medications: string[];
@@ -57,7 +57,7 @@ export class RegisterTreatmentTool extends AiToolInterface {
 
   constructor(
     private readonly registerTreatment: RegisterTreatmentUseCase,
-    private readonly medications: MedicationsService,
+    private readonly findMedication: FindMedicationByNameUseCase,
   ) {
     super();
   }
@@ -95,10 +95,7 @@ export class RegisterTreatmentTool extends AiToolInterface {
       const medicationsId: string[] = [];
 
       for (const medicationName of input.medications) {
-        const matches = await this.medications.getMedicationsByName(
-          medicationName,
-          jid,
-        );
+        const matches = await this.findMedication.execute(medicationName, jid);
 
         if (matches.length === 0) {
           return `Erro: o medicamento "${medicationName}" não está cadastrado. Cadastre-o primeiro com a ferramenta register_medication antes de iniciar o tratamento.`;

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { AiToolDefinition } from '../../../@types';
 import { jidToUserId } from '../../../utils/functions.js';
 import { AiToolInterface } from '../interfaces/index.js';
-import { MedicationsService } from 'src/modules/medications/medications.service';
+import { RegisterMedicationUseCase } from '../../../medications/application/use-cases/register-medication.usecase';
 
 type RegisterMedicationArgs = {
   name: string;
@@ -34,7 +34,7 @@ export class RegisterMedicationTool extends AiToolInterface {
     },
   };
 
-  constructor(private readonly medications: MedicationsService) {
+  constructor(private readonly registerMedication: RegisterMedicationUseCase) {
     super();
   }
 
@@ -42,7 +42,7 @@ export class RegisterMedicationTool extends AiToolInterface {
     const input = args as RegisterMedicationArgs;
 
     try {
-      const medication = await this.medications.create({
+      const medication = await this.registerMedication.execute({
         userId: jidToUserId(jid),
         jid,
         name: input.name,
