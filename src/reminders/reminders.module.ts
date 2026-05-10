@@ -16,7 +16,6 @@ import { CreateNextReminderUseCase } from './application/use-cases/create-next-r
 import { DispatchDueRemindersUseCase } from './application/use-cases/dispatch-due-reminders.usecase';
 import { AutoSkipExpiredRemindersUseCase } from './application/use-cases/auto-skip-expired-reminders.usecase';
 
-import { RemindersController } from './adapters/in/reminders.controller';
 import { RemindersDispatchCron } from './adapters/in/reminders-dispatch.cron';
 import { RemindersAutoSkipCron } from './adapters/in/reminders-auto-skip.cron';
 import { ConfirmDoseTool } from './adapters/in/ai-tools/confirm-dose.tool';
@@ -26,7 +25,6 @@ import { SkipDoseHandler } from './adapters/in/whatsapp/skip-dose.handler';
 
 @Module({
   imports: [forwardRef(() => BotModule), forwardRef(() => TreatmentsModule)],
-  controllers: [RemindersController],
   providers: [
     { provide: RemindersRepository, useClass: DrizzleRemindersRepository },
     { provide: Clock, useClass: SystemClockAdapter },
