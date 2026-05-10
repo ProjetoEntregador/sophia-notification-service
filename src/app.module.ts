@@ -4,7 +4,7 @@ import { BotModule } from './bot/bot.module';
 import { DatabaseModule } from './database.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { RemindersModule } from './reminders/reminders.module';
-import { TreatmentsModule } from './modules/treatments/treatments.module';
+import { TreatmentsModule } from './treatments/treatments.module';
 import { PublisherModule } from './message/publisher/publisher.module';
 import { ConsumerModule } from './message/consumer/consumer.module';
 import { MessageModule } from './message.module';

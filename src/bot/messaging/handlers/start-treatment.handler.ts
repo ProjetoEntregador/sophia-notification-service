@@ -3,7 +3,7 @@ import {
   MessageHandlerInterface,
   MessageSenderInterface,
 } from '../../interfaces/index.js';
-import { TreatmentsService } from '../../../modules/treatments/treatments.service.js';
+import { RegisterTreatmentUseCase } from '../../../treatments/application/use-cases/register-treatment.usecase';
 import { ConversationStateService } from '../state/conversation-state.service.js';
 import { jidToUserId } from '../../../utils/functions.js';
 import {
@@ -25,7 +25,7 @@ export class StartTreatmentHandler extends MessageHandlerInterface {
   readonly flowName = FLOW;
 
   constructor(
-    private readonly treatments: TreatmentsService,
+    private readonly registerTreatment: RegisterTreatmentUseCase,
     private readonly medications: MedicationsService,
     private readonly state: ConversationStateService,
     private readonly sender: MessageSenderInterface,
@@ -133,7 +133,7 @@ export class StartTreatmentHandler extends MessageHandlerInterface {
       }
     }
 
-    await this.treatments.create({
+    await this.registerTreatment.execute({
       userId: jidToUserId(jid),
       jid,
       intervalHours: draft.intervalHours as number,

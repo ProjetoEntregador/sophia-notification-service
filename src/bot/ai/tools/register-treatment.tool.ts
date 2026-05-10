@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AiToolDefinition } from '../../../@types';
-import { TreatmentsService } from '../../../modules/treatments/treatments.service.js';
+import { RegisterTreatmentUseCase } from '../../../treatments/application/use-cases/register-treatment.usecase';
 import { jidToUserId } from '../../../utils/functions.js';
 import { AiToolInterface } from '../interfaces/index.js';
 import { MedicationsService } from 'src/modules/medications/medications.service';
@@ -56,7 +56,7 @@ export class RegisterTreatmentTool extends AiToolInterface {
   };
 
   constructor(
-    private readonly treatments: TreatmentsService,
+    private readonly registerTreatment: RegisterTreatmentUseCase,
     private readonly medications: MedicationsService,
   ) {
     super();
@@ -112,7 +112,7 @@ export class RegisterTreatmentTool extends AiToolInterface {
         medicationsId.push(chosen.id);
       }
 
-      const treatment = await this.treatments.create({
+      const treatment = await this.registerTreatment.execute({
         userId: jidToUserId(jid),
         jid,
         intervalHours: input.intervalHours,
