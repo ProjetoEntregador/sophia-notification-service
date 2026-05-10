@@ -13,6 +13,7 @@ export class RemindersDispatchCron {
   async tick(): Promise<void> {
     if (this.running) return;
     this.running = true;
+
     try {
       await this.dispatch.execute();
     } catch (err) {

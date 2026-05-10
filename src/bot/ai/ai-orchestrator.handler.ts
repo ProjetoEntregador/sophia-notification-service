@@ -1,8 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import {
-  MessageHandlerInterface,
-  MessageSenderInterface,
-} from '../interfaces/index.js';
+import { MessageHandlerInterface } from '../interfaces/index.js';
+import { MessageSender } from '../../shared/ports/message-sender.port';
 import { AiServiceInterface } from './interfaces/index.js';
 import { ChatHistoryService } from './chat-history.service.js';
 import { AiToolsRegistry } from './ai-tools.registry.js';
@@ -22,7 +20,7 @@ export class AiOrchestratorHandler extends MessageHandlerInterface {
     private readonly ai: AiServiceInterface,
     private readonly history: ChatHistoryService,
     private readonly tools: AiToolsRegistry,
-    private readonly sender: MessageSenderInterface,
+    private readonly sender: MessageSender,
   ) {
     super();
   }

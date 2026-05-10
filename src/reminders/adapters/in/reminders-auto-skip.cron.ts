@@ -15,8 +15,10 @@ export class RemindersAutoSkipCron {
   async tick(): Promise<void> {
     if (this.running) return;
     this.running = true;
+
     try {
       const skipped = await this.autoSkip.execute(REMINDER_GRACE_MINUTES);
+
       if (skipped.length > 0) {
         this.logger.log(
           `Auto-skip: ${skipped.length} dose(s) sem resposta após ${REMINDER_GRACE_MINUTES}min — próximas geradas`,

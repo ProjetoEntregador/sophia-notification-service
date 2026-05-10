@@ -3,9 +3,9 @@ import {
   MessageHandlerInterface,
   MessageHandlerRegistryInterface,
 } from '../interfaces/index.js';
-import { ConfirmDoseHandler } from './handlers/confirm-dose.handler.js';
-import { SkipDoseHandler } from './handlers/skip-dose.handler.js';
-import { StartTreatmentHandler } from './handlers/start-treatment.handler.js';
+import { ConfirmDoseHandler } from '../../reminders/adapters/in/whatsapp/confirm-dose.handler';
+import { SkipDoseHandler } from '../../reminders/adapters/in/whatsapp/skip-dose.handler';
+import { StartTreatmentHandler } from '../../treatments/adapters/in/whatsapp/start-treatment.handler';
 import { AiOrchestratorHandler } from '../ai/ai-orchestrator.handler.js';
 
 @Injectable()

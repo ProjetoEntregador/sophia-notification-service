@@ -8,6 +8,7 @@ import { DeleteMedicationUseCase } from './application/use-cases/delete-medicati
 import { FindMedicationByNameUseCase } from './application/use-cases/find-medication-by-name.usecase';
 import { GetMedicationStatusUseCase } from './application/use-cases/get-medication-status.usecase';
 import { MedicationsController } from './adapters/in/medications.controller';
+import { RegisterMedicationTool } from './adapters/in/ai-tools/register-medication.tool';
 
 @Module({
   controllers: [MedicationsController],
@@ -19,12 +20,14 @@ import { MedicationsController } from './adapters/in/medications.controller';
     DeleteMedicationUseCase,
     FindMedicationByNameUseCase,
     GetMedicationStatusUseCase,
+    RegisterMedicationTool,
   ],
   exports: [
     RegisterMedicationUseCase,
     FindMedicationByNameUseCase,
     GetMedicationStatusUseCase,
     ListMedicationsUseCase,
+    RegisterMedicationTool,
   ],
 })
 export class MedicationsModule {}

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { AiToolDefinition } from '../../../@types';
-import { jidToUserId } from '../../../utils/functions.js';
-import { AiToolInterface } from '../interfaces/index.js';
-import { RegisterMedicationUseCase } from '../../../medications/application/use-cases/register-medication.usecase';
+import { AiToolDefinition } from '../../../../@types';
+import { jidToUserId } from '../../../../utils/functions.js';
+import { AiToolInterface } from '../../../../bot/ai/interfaces/index.js';
+import { RegisterMedicationUseCase } from '../../../application/use-cases/register-medication.usecase';
 
 type RegisterMedicationArgs = {
   name: string;
@@ -18,10 +18,7 @@ export class RegisterMedicationTool extends AiToolInterface {
     inputSchema: {
       type: 'object',
       properties: {
-        name: {
-          type: 'string',
-          description: 'Nome do medicamento.',
-        },
+        name: { type: 'string', description: 'Nome do medicamento.' },
         quantity: {
           type: 'integer',
           minimum: 1,

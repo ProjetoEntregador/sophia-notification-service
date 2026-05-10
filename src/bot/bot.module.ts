@@ -8,13 +8,9 @@ import { QrCodeTerminalPresenter } from './presenters/qr-code-terminal.presenter
 import {
   MessageHandlerRegistryInterface,
   MessageRouterInterface,
-  MessageSenderInterface,
   QrCodePresenterInterface,
   SocketProviderInterface,
 } from './interfaces/index.js';
-import { ConfirmDoseHandler } from './messaging/handlers/confirm-dose.handler.js';
-import { SkipDoseHandler } from './messaging/handlers/skip-dose.handler.js';
-import { StartTreatmentHandler } from './messaging/handlers/start-treatment.handler.js';
 import { RemindersModule } from '../reminders/reminders.module';
 import { TreatmentsModule } from '../treatments/treatments.module';
 import { MedicationsModule } from '../medications/medications.module';
@@ -24,10 +20,6 @@ import { ConversationStateService } from './messaging/state/conversation-state.s
 import { AiOrchestratorHandler } from './ai/ai-orchestrator.handler.js';
 import { ChatHistoryService } from './ai/chat-history.service.js';
 import { AiToolsRegistry } from './ai/ai-tools.registry.js';
-import { RegisterMedicationTool } from './ai/tools/register-medication.tool.js';
-import { RegisterTreatmentTool } from './ai/tools/register-treatment.tool.js';
-import { ConfirmDoseTool } from './ai/tools/confirm-dose.tool.js';
-import { SkipDoseTool } from './ai/tools/skip-dose.tool.js';
 import { LocalAiService } from './ai/local-ai.service.js';
 import { AiServiceInterface } from './ai/interfaces/index.js';
 import { MessageSender } from '../shared/ports/message-sender.port';
@@ -35,7 +27,7 @@ import { MessageSender } from '../shared/ports/message-sender.port';
 @Module({
   imports: [
     forwardRef(() => RemindersModule),
-    TreatmentsModule,
+    forwardRef(() => TreatmentsModule),
     MedicationsModule,
   ],
   controllers: [BotController],
@@ -46,15 +38,7 @@ import { MessageSender } from '../shared/ports/message-sender.port';
     MessageService,
     ConversationStateService,
 
-    ConfirmDoseHandler,
-    SkipDoseHandler,
-    StartTreatmentHandler,
-
     ChatHistoryService,
-    RegisterMedicationTool,
-    RegisterTreatmentTool,
-    ConfirmDoseTool,
-    SkipDoseTool,
     AiToolsRegistry,
     AiOrchestratorHandler,
     LocalAiService,
@@ -72,11 +56,8 @@ import { MessageSender } from '../shared/ports/message-sender.port';
       useExisting: WhatsAppConnectionService,
     },
     { provide: QrCodePresenterInterface, useClass: QrCodeTerminalPresenter },
-    { provide: MessageSenderInterface, useClass: MessageService },
-
-    // Bridge do port hexagonal MessageSender para a implementação concreta legada.
-    { provide: MessageSender, useExisting: MessageSenderInterface },
+    { provide: MessageSender, useClass: MessageService },
   ],
-  exports: [WhatsAppSessionService, MessageSenderInterface, MessageSender],
+  exports: [WhatsAppSessionService, MessageSender, ConversationStateService],
 })
 export class BotModule {}

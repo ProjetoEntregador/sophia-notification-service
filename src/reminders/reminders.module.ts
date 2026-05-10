@@ -17,16 +17,18 @@ import { AutoSkipExpiredRemindersUseCase } from './application/use-cases/auto-sk
 import { RemindersController } from './adapters/in/reminders.controller';
 import { RemindersDispatchCron } from './adapters/in/reminders-dispatch.cron';
 import { RemindersAutoSkipCron } from './adapters/in/reminders-auto-skip.cron';
+import { ConfirmDoseTool } from './adapters/in/ai-tools/confirm-dose.tool';
+import { SkipDoseTool } from './adapters/in/ai-tools/skip-dose.tool';
+import { ConfirmDoseHandler } from './adapters/in/whatsapp/confirm-dose.handler';
+import { SkipDoseHandler } from './adapters/in/whatsapp/skip-dose.handler';
 
 @Module({
   imports: [forwardRef(() => BotModule)],
   controllers: [RemindersController],
   providers: [
-    // out
     { provide: RemindersRepository, useClass: DrizzleRemindersRepository },
     { provide: Clock, useClass: SystemClockAdapter },
 
-    // application
     ListRemindersUseCase,
     DeleteReminderUseCase,
     ConfirmDoseUseCase,
@@ -35,10 +37,23 @@ import { RemindersAutoSkipCron } from './adapters/in/reminders-auto-skip.cron';
     DispatchDueRemindersUseCase,
     AutoSkipExpiredRemindersUseCase,
 
-    // in (crons)
     RemindersDispatchCron,
     RemindersAutoSkipCron,
+
+    ConfirmDoseTool,
+    SkipDoseTool,
+
+    ConfirmDoseHandler,
+    SkipDoseHandler,
   ],
-  exports: [CreateInitialReminderUseCase, ConfirmDoseUseCase, SkipDoseUseCase],
+  exports: [
+    CreateInitialReminderUseCase,
+    ConfirmDoseUseCase,
+    SkipDoseUseCase,
+    ConfirmDoseTool,
+    SkipDoseTool,
+    ConfirmDoseHandler,
+    SkipDoseHandler,
+  ],
 })
 export class RemindersModule {}

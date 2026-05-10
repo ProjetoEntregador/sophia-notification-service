@@ -38,6 +38,7 @@ export class RemindersController {
   findAllPending(@Query('start') start: string, @Query('end') end: string) {
     const startDate = toDate(start);
     const endDate = toDate(end);
+
     if (!startDate || !endDate) {
       throw new BadRequestException("Provide a valid 'start' and 'end' date");
     }
