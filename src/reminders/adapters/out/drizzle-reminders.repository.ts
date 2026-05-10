@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { and, asc, desc, eq, gte, isNull, lt, lte } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DRIZZLE } from '../../../database.module';
@@ -151,49 +151,6 @@ export class DrizzleRemindersRepository extends RemindersRepository {
       .where(eq(reminders.id, id))
       .returning({ id: reminders.id });
     return result.length > 0;
-  }
-
-  async scheduleNextAfter(reminder: Reminder): Promise<Reminder | null> {
-    if (!reminder.confirmedAt) return null;
-
-    return this.db.transaction(async (tx) => {
-      const [treatment] = await tx
-        .select()
-        .from(treatments)
-        .where(eq(treatments.id, reminder.treatmentId));
-
-      if (!treatment) {
-        throw new NotFoundException(
-          'Reminder is not related to any treatment.',
-        );
-      }
-
-      const nextScheduledTime = new Date(reminder.confirmedAt as Date);
-      nextScheduledTime.setHours(
-        nextScheduledTime.getHours() + treatment.intervalHours,
-      );
-
-      if (nextScheduledTime > treatment.endTime) {
-        const delay = nextScheduledTime.getTime() - treatment.endTime.getTime();
-        await tx
-          .update(treatments)
-          .set({ endTime: new Date(treatment.endTime.getTime() + delay) })
-          .where(eq(treatments.id, treatment.id));
-      }
-
-      const [created] = await tx
-        .insert(reminders)
-        .values({
-          treatmentId: treatment.id,
-          scheduledTime: nextScheduledTime,
-          sent: false,
-          sentAt: null,
-          confirmed: null,
-          confirmedAt: null,
-        })
-        .returning();
-      return this.toEntity(created);
-    });
   }
 
   private async wasPreviousSkipped(

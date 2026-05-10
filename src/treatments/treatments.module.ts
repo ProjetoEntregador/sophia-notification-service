@@ -13,7 +13,11 @@ import { RegisterTreatmentTool } from './adapters/in/ai-tools/register-treatment
 import { StartTreatmentHandler } from './adapters/in/whatsapp/start-treatment.handler';
 
 @Module({
-  imports: [RemindersModule, MedicationsModule, forwardRef(() => BotModule)],
+  imports: [
+    forwardRef(() => RemindersModule),
+    MedicationsModule,
+    forwardRef(() => BotModule),
+  ],
   controllers: [TreatmentsController],
   providers: [
     { provide: TreatmentsRepository, useClass: DrizzleTreatmentsRepository },
@@ -25,6 +29,7 @@ import { StartTreatmentHandler } from './adapters/in/whatsapp/start-treatment.ha
     StartTreatmentHandler,
   ],
   exports: [
+    TreatmentsRepository,
     RegisterTreatmentUseCase,
     ListTreatmentsUseCase,
     RegisterTreatmentTool,

@@ -1,5 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { BotModule } from '../bot/bot.module';
+import { TreatmentsModule } from '../treatments/treatments.module';
 import { Clock } from '../shared/ports/clock.port';
 import { SystemClockAdapter } from '../shared/adapters/system-clock.adapter';
 
@@ -11,6 +12,7 @@ import { DeleteReminderUseCase } from './application/use-cases/delete-reminder.u
 import { ConfirmDoseUseCase } from './application/use-cases/confirm-dose.usecase';
 import { SkipDoseUseCase } from './application/use-cases/skip-dose.usecase';
 import { CreateInitialReminderUseCase } from './application/use-cases/create-initial-reminder.usecase';
+import { CreateNextReminderUseCase } from './application/use-cases/create-next-reminder.usecase';
 import { DispatchDueRemindersUseCase } from './application/use-cases/dispatch-due-reminders.usecase';
 import { AutoSkipExpiredRemindersUseCase } from './application/use-cases/auto-skip-expired-reminders.usecase';
 
@@ -23,7 +25,7 @@ import { ConfirmDoseHandler } from './adapters/in/whatsapp/confirm-dose.handler'
 import { SkipDoseHandler } from './adapters/in/whatsapp/skip-dose.handler';
 
 @Module({
-  imports: [forwardRef(() => BotModule)],
+  imports: [forwardRef(() => BotModule), forwardRef(() => TreatmentsModule)],
   controllers: [RemindersController],
   providers: [
     { provide: RemindersRepository, useClass: DrizzleRemindersRepository },
@@ -34,6 +36,7 @@ import { SkipDoseHandler } from './adapters/in/whatsapp/skip-dose.handler';
     ConfirmDoseUseCase,
     SkipDoseUseCase,
     CreateInitialReminderUseCase,
+    CreateNextReminderUseCase,
     DispatchDueRemindersUseCase,
     AutoSkipExpiredRemindersUseCase,
 

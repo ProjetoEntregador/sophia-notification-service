@@ -12,8 +12,4 @@ export abstract class RemindersRepository {
 
   abstract save(reminder: Reminder): Promise<Reminder>;
   abstract delete(id: string): Promise<boolean>;
-
-  // Cross-aggregate: cria o próximo reminder do tratamento a partir do reminder atual,
-  // estendendo o endTime do tratamento se a próxima dose ultrapassar o término.
-  abstract scheduleNextAfter(reminder: Reminder): Promise<Reminder | null>;
 }
