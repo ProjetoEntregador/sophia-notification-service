@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { MessageHandlerInterface } from '../interfaces/index.js';
+import { MessageHandlerInterface } from '../interfaces/index';
 
 @Injectable()
 export class LogMessageHandler extends MessageHandlerInterface {

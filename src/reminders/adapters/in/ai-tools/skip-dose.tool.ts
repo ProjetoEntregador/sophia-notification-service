@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { AiToolDefinition } from '../../../../@types';
-import { SkipDoseUseCase } from '../../../application/use-cases/skip-dose.usecase';
-import { AiToolInterface } from '../../../../bot/ai/interfaces/index.js';
+import { AiToolDefinition } from '@/@types';
+import { AiToolInterface } from '@/bot/ai/interfaces/index';
+import { SkipDoseUseCase } from '@/reminders/application/use-cases/skip-dose.usecase';
 
 @Injectable()
 export class SkipDoseTool extends AiToolInterface {

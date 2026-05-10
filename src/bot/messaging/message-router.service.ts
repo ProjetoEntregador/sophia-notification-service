@@ -3,8 +3,8 @@ import {
   MessageHandlerInterface,
   MessageHandlerRegistryInterface,
   MessageRouterInterface,
-} from '../interfaces/index.js';
-import { ConversationStateService } from './state/conversation-state.service.js';
+} from '../interfaces/index';
+import { ConversationStateService } from './state/conversation-state.service';
 
 @Injectable()
 export class MessageRouter extends MessageRouterInterface {

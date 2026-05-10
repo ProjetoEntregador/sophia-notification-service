@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { MessageHandlerInterface } from '../../../../bot/interfaces/index.js';
-import { MessageSender } from '../../../../shared/ports/message-sender.port';
-import { ConfirmDoseUseCase } from '../../../application/use-cases/confirm-dose.usecase';
+import { MessageHandlerInterface } from '@/bot/interfaces/index';
+import { MessageSender } from '@/shared/ports/message-sender.port';
+import { ConfirmDoseUseCase } from '@/reminders/application/use-cases/confirm-dose.usecase';
 
 @Injectable()
 export class ConfirmDoseHandler extends MessageHandlerInterface {

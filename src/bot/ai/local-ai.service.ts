@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { isAxiosError } from 'axios';
-import { AiChatRequest, AiChatResponse } from '../../@types';
-import { AiServiceInterface } from './interfaces/index.js';
-import { baseApiToAI } from '../../utils/baseApi.js';
+import { AiChatRequest, AiChatResponse } from '@/@types/ai';
+import { AiServiceInterface } from './interfaces/index';
+import { baseApiToAI } from '@/utils/baseApi';
 
 const CHAT_PATH = '/chat/completions';
 

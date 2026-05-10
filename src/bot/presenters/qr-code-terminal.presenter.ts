@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as qrcode from 'qrcode-terminal';
-import { QrCodePresenterInterface } from '../interfaces/index.js';
+import { QrCodePresenterInterface } from '../interfaces/index';
 
 @Injectable()
 export class QrCodeTerminalPresenter extends QrCodePresenterInterface {

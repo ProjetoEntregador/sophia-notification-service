@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { RemindersRepository } from '../../domain/reminders.repository.port';
+import { RemindersRepository } from '@/reminders/domain/reminders.repository.port';
 
 @Injectable()
 export class DeleteReminderUseCase {

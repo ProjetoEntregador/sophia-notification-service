@@ -1,2 +1,2 @@
-export { AiServiceInterface } from './ai-service.interface.js';
-export { AiToolInterface } from './ai-tool.interface.js';
+export { AiServiceInterface } from './ai-service.interface';
+export { AiToolInterface } from './ai-tool.interface';

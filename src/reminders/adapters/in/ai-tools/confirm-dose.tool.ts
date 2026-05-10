@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { AiToolDefinition } from '../../../../@types';
-import { ConfirmDoseUseCase } from '../../../application/use-cases/confirm-dose.usecase';
-import { AiToolInterface } from '../../../../bot/ai/interfaces/index.js';
+import { AiToolDefinition } from '@/@types';
+import { ConfirmDoseUseCase } from '@/reminders/application/use-cases/confirm-dose.usecase';
+import { AiToolInterface } from '@/bot/ai/interfaces/index';
 
 @Injectable()
 export class ConfirmDoseTool extends AiToolInterface {

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ConversationState } from '../../../@types';
+import { ConversationState } from '@/@types';
 
 // TODO: persistir em Postgres/Redis quando o bot rodar com múltiplas instâncias.
 @Injectable()

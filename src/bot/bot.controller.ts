@@ -1,5 +1,5 @@
 import { Controller, Post } from '@nestjs/common';
-import { MessageSender } from '../shared/ports/message-sender.port';
+import { MessageSender } from '@/shared/ports/message-sender.port';
 
 @Controller('bot')
 export class BotController {
