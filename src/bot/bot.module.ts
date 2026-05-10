@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { BotController } from './bot.controller.js';
 import { BotService } from './bot.service.js';
 import { WhatsAppConnectionService } from './connection/whatsapp-connection.service.js';
@@ -15,7 +15,7 @@ import {
 import { ConfirmDoseHandler } from './messaging/handlers/confirm-dose.handler.js';
 import { SkipDoseHandler } from './messaging/handlers/skip-dose.handler.js';
 import { StartTreatmentHandler } from './messaging/handlers/start-treatment.handler.js';
-import { RemindersModule } from '../modules/reminders/reminders.module.js';
+import { RemindersModule } from '../reminders/reminders.module';
 import { TreatmentsModule } from '../modules/treatments/treatments.module.js';
 import { MedicationsModule } from '../modules/medications/medications.module.js';
 import { MessageRouter } from './messaging/message-router.service.js';
@@ -30,10 +30,14 @@ import { ConfirmDoseTool } from './ai/tools/confirm-dose.tool.js';
 import { SkipDoseTool } from './ai/tools/skip-dose.tool.js';
 import { LocalAiService } from './ai/local-ai.service.js';
 import { AiServiceInterface } from './ai/interfaces/index.js';
-import { RemindersDispatchCron } from './cron/reminders-dispatch.cron.js';
+import { MessageSender } from '../shared/ports/message-sender.port';
 
 @Module({
-  imports: [RemindersModule, TreatmentsModule, MedicationsModule],
+  imports: [
+    forwardRef(() => RemindersModule),
+    TreatmentsModule,
+    MedicationsModule,
+  ],
   controllers: [BotController],
   providers: [
     WhatsAppConnectionService,
@@ -54,7 +58,6 @@ import { RemindersDispatchCron } from './cron/reminders-dispatch.cron.js';
     AiToolsRegistry,
     AiOrchestratorHandler,
     LocalAiService,
-    RemindersDispatchCron,
     { provide: AiServiceInterface, useExisting: LocalAiService },
 
     StaticMessageHandlerRegistry,
@@ -70,7 +73,10 @@ import { RemindersDispatchCron } from './cron/reminders-dispatch.cron.js';
     },
     { provide: QrCodePresenterInterface, useClass: QrCodeTerminalPresenter },
     { provide: MessageSenderInterface, useClass: MessageService },
+
+    // Bridge do port hexagonal MessageSender para a implementação concreta legada.
+    { provide: MessageSender, useExisting: MessageSenderInterface },
   ],
-  exports: [WhatsAppSessionService, MessageSenderInterface],
+  exports: [WhatsAppSessionService, MessageSenderInterface, MessageSender],
 })
 export class BotModule {}

@@ -3,12 +3,12 @@ import {
   MessageHandlerInterface,
   MessageSenderInterface,
 } from '../../interfaces/index.js';
-import { RemindersService } from '../../../modules/reminders/reminders.service.js';
+import { ConfirmDoseUseCase } from '../../../reminders/application/use-cases/confirm-dose.usecase';
 
 @Injectable()
 export class ConfirmDoseHandler extends MessageHandlerInterface {
   constructor(
-    private readonly remindersService: RemindersService,
+    private readonly confirmDose: ConfirmDoseUseCase,
     private readonly sender: MessageSenderInterface,
   ) {
     super();
@@ -19,7 +19,7 @@ export class ConfirmDoseHandler extends MessageHandlerInterface {
   }
 
   async handle(jid: string): Promise<void> {
-    const reminder = await this.remindersService.confirmDose(jid);
+    const reminder = await this.confirmDose.byJid(jid);
     const reply = reminder
       ? 'Dose confirmada ✅ Continue assim!'
       : 'Não encontrei nenhuma dose pendente para confirmar.';

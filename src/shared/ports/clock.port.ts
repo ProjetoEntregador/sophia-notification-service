@@ -1,1 +1,3 @@
-// TODO: interface Clock { now(): Date }
+export abstract class Clock {
+  abstract now(): Date;
+}

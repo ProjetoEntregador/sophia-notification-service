@@ -3,12 +3,12 @@ import {
   MessageHandlerInterface,
   MessageSenderInterface,
 } from '../../interfaces/index.js';
-import { RemindersService } from '../../../modules/reminders/reminders.service.js';
+import { SkipDoseUseCase } from '../../../reminders/application/use-cases/skip-dose.usecase';
 
 @Injectable()
 export class SkipDoseHandler extends MessageHandlerInterface {
   constructor(
-    private readonly remindersService: RemindersService,
+    private readonly skipDose: SkipDoseUseCase,
     private readonly sender: MessageSenderInterface,
   ) {
     super();
@@ -19,7 +19,7 @@ export class SkipDoseHandler extends MessageHandlerInterface {
   }
 
   async handle(jid: string): Promise<void> {
-    const reminder = await this.remindersService.skipDose(jid);
+    const reminder = await this.skipDose.byJid(jid);
     const reply = reminder
       ? 'Anotado. Tente não pular a próxima 🙏'
       : 'Não encontrei nenhuma dose pendente para registrar.';

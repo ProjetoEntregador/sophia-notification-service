@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AiToolDefinition } from '../../../@types';
-import { RemindersService } from '../../../modules/reminders/reminders.service.js';
+import { ConfirmDoseUseCase } from '../../../reminders/application/use-cases/confirm-dose.usecase';
 import { AiToolInterface } from '../interfaces/index.js';
 
 @Injectable()
@@ -16,13 +16,13 @@ export class ConfirmDoseTool extends AiToolInterface {
     },
   };
 
-  constructor(private readonly reminders: RemindersService) {
+  constructor(private readonly confirmDose: ConfirmDoseUseCase) {
     super();
   }
 
   async execute(jid: string): Promise<string> {
     try {
-      const reminder = await this.reminders.confirmDose(jid);
+      const reminder = await this.confirmDose.byJid(jid);
       return reminder
         ? `Dose confirmada (reminder ${reminder.id}).`
         : 'Não há dose pendente para confirmar no momento.';

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AiToolDefinition } from '../../../@types';
-import { RemindersService } from '../../../modules/reminders/reminders.service.js';
+import { SkipDoseUseCase } from '../../../reminders/application/use-cases/skip-dose.usecase';
 import { AiToolInterface } from '../interfaces/index.js';
 
 @Injectable()
@@ -16,13 +16,13 @@ export class SkipDoseTool extends AiToolInterface {
     },
   };
 
-  constructor(private readonly reminders: RemindersService) {
+  constructor(private readonly skipDose: SkipDoseUseCase) {
     super();
   }
 
   async execute(jid: string): Promise<string> {
     try {
-      const reminder = await this.reminders.skipDose(jid);
+      const reminder = await this.skipDose.byJid(jid);
       return reminder
         ? `Dose marcada como pulada (reminder ${reminder.id}).`
         : 'Não há dose pendente para pular no momento.';
