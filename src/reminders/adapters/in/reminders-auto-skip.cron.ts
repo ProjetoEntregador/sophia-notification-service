@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { AutoSkipExpiredRemindersUseCase } from '../../application/use-cases/auto-skip-expired-reminders.usecase';
+import { AutoSkipExpiredRemindersUseCase } from '@/reminders/application/use-cases/auto-skip-expired-reminders.usecase';
 
 const REMINDER_GRACE_MINUTES = 30;
 

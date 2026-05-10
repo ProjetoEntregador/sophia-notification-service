@@ -1,5 +1,5 @@
 import { pgTable, uuid, timestamp, boolean, index } from 'drizzle-orm/pg-core';
-import { treatments } from '../../../treatments/adapters/out/treatment.schema';
+import { treatments } from '@/db/schema';
 
 export const reminders = pgTable(
   'reminders',

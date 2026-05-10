@@ -1,4 +1,4 @@
-import { AiToolDefinition } from '../../../@types';
+import { AiToolDefinition } from '@/@types';
 
 export abstract class AiToolInterface {
   abstract readonly definition: AiToolDefinition;

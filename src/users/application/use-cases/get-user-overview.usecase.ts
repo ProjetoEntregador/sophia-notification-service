@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { UsersRepository } from '../../domain/users.repository.port';
-import { UserOverview } from '../../domain/user-overview.type';
+import { UserOverview } from '@/users/domain/user-overview.type';
+import { UsersRepository } from '@/users/domain/users.repository.port';
 
 @Injectable()
 export class GetUserOverviewUseCase {

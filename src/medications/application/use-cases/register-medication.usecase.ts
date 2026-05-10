@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { Medication } from '../../domain/medication.entity';
-import { MedicationsRepository } from '../../domain/medications.repository.port';
+import { Medication } from '@/medications/domain/medication.entity';
+import { MedicationsRepository } from '@/medications/domain/medications.repository.port';
 import { CreateMedicationInput } from '../dtos/medication.input';
 
 @Injectable()

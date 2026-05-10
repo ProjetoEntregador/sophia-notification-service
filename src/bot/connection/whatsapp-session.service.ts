@@ -6,11 +6,11 @@ import {
   WAMessage,
   WASocket,
 } from 'baileys';
-import { WhatsAppConnectionService } from './whatsapp-connection.service.js';
 import {
   MessageRouterInterface,
   QrCodePresenterInterface,
-} from '../interfaces/index.js';
+} from '../interfaces/index';
+import { WhatsAppConnectionService } from './whatsapp-connection.service';
 
 @Injectable()
 export class WhatsAppSessionService {

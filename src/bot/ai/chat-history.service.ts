@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { AiChatMessage } from '../../@types';
-import { MAX_HISTORY_MESSAGES } from './ai.constants.js';
+import { MAX_HISTORY_MESSAGES } from './ai.constants';
+import { AiChatMessage } from '@/@types';
 
 @Injectable()
 export class ChatHistoryService {

@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Treatment } from '../../../treatments/domain/treatment.entity';
-import { MedicationsRepository } from '../../domain/medications.repository.port';
-import { MedicationStatus } from '../../domain/medication-status';
+import { Treatment } from '@/treatments/domain/treatment.entity';
+import { MedicationStatus } from '@/medications/domain/medication-status';
+import { MedicationsRepository } from '@/medications/domain/medications.repository.port';
 
 @Injectable()
 export class GetMedicationStatusUseCase {

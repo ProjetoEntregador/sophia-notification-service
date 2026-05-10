@@ -1,5 +1,5 @@
+import { Treatment } from '@/treatments/domain/treatment.entity';
 import { Medication } from './medication.entity';
-import { Treatment } from '../../treatments/domain/treatment.entity';
 
 export abstract class MedicationsRepository {
   abstract findAll(): Promise<Medication[]>;

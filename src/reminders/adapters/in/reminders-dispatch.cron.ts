@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { DispatchDueRemindersUseCase } from '../../application/use-cases/dispatch-due-reminders.usecase';
+import { DispatchDueRemindersUseCase } from '@/reminders/application/use-cases/dispatch-due-reminders.usecase';
 
 @Injectable()
 export class RemindersDispatchCron {

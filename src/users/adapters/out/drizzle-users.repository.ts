@@ -1,11 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { eq, sql } from 'drizzle-orm';
+import { DATABASE } from '@/db/database.module';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { DATABASE } from '../../../db/database.module';
-import { treatments } from '../../../treatments/adapters/out/treatment.schema';
-import { reminders } from '../../../reminders/adapters/out/reminder.schema';
-import { UsersRepository } from '../../domain/users.repository.port';
-import { UserOverview } from '../../domain/user-overview.type';
+import { treatments } from '@/treatments/adapters/out/treatment.schema';
+import { reminders } from '@/reminders/adapters/out/reminder.schema';
+import { UsersRepository } from '@/users/domain/users.repository.port';
+import { UserOverview } from '@/users/domain/user-overview.type';
 import { User } from 'src/users/domain/user.entity';
 import { users } from './user.schema';
 
