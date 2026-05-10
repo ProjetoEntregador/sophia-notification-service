@@ -1,3 +1,9 @@
-// Re-export do pgTable existente. Migrar inteiro pra cá quando todas as funcionalidades de medicamentos
-// estiverem no novo layout — mantém migrations e relations atuais funcionando.
-export { medications } from '../../../db/schema/medications';
+import { pgTable, uuid, varchar, integer } from 'drizzle-orm/pg-core';
+
+export const medications = pgTable('medications', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull(),
+  jid: varchar('jid', { length: 255 }).notNull(),
+  name: varchar('name', { length: 255 }).notNull(),
+  quantity: integer('quantity').notNull(),
+});

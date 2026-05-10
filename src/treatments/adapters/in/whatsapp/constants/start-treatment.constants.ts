@@ -1,8 +1,8 @@
-import { TreatmentStep } from '../../../@types';
+import { TreatmentStep } from '../types/treatment-flow.types';
 import {
   buildTreatmentSummary,
   parseBrDate,
-} from '../../../utils/functions.js';
+} from '../../../../../utils/functions.js';
 
 export const FLOW = 'start_treatment';
 export const TRIGGERS = [

@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { Treatment } from '../../domain/treatment.entity';
 import { TreatmentsRepository } from '../../domain/treatment.repository.port';
 import { CreateInitialReminderUseCase } from '../../../reminders/application/use-cases/create-initial-reminder.usecase';
-import { CreateTreatmentInput } from '../../../@types';
+import { CreateTreatmentInput } from '../dtos/treatment.input';
 
 @Injectable()
 export class RegisterTreatmentUseCase {

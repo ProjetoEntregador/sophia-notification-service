@@ -12,7 +12,7 @@ import {
 import {
   CreateMedicationDto,
   UpdateMedicationDto,
-} from '../../../@types/medications';
+} from './dtos/medication.dto';
 import { ListMedicationsUseCase } from '../../application/use-cases/list-medications.usecase';
 import { RegisterMedicationUseCase } from '../../application/use-cases/register-medication.usecase';
 import { UpdateMedicationUseCase } from '../../application/use-cases/update-medication.usecase';

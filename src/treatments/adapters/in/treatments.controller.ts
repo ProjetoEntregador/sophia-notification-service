@@ -9,7 +9,7 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import { CreateTreatmentDto, UpdateTreatmentDto } from '../../../@types';
+import { CreateTreatmentDto, UpdateTreatmentDto } from './dtos/treatment.dto';
 import { ListTreatmentsUseCase } from '../../application/use-cases/list-treatments.usecase';
 import { RegisterTreatmentUseCase } from '../../application/use-cases/register-treatment.usecase';
 import { UpdateTreatmentUseCase } from '../../application/use-cases/update-treatment.usecase';

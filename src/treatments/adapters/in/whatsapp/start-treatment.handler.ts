@@ -4,18 +4,18 @@ import { MessageSender } from '../../../../shared/ports/message-sender.port';
 import { RegisterTreatmentUseCase } from '../../../application/use-cases/register-treatment.usecase';
 import { ConversationStateService } from '../../../../bot/messaging/state/conversation-state.service.js';
 import { jidToUserId } from '../../../../utils/functions.js';
+import { ConversationState } from '../../../../@types';
 import {
-  ConversationState,
   TreatmentDraft,
   TreatmentStepResult,
-} from '../../../../@types';
+} from './types/treatment-flow.types';
 import {
   CANCEL_KEYWORD,
   FLOW,
   MESSAGES,
   STEPS,
   TRIGGERS,
-} from '../../../../bot/messaging/constansts/start-treatment.constants.js';
+} from './constants/start-treatment.constants';
 import { FindMedicationByNameUseCase } from '../../../../medications/application/use-cases/find-medication-by-name.usecase';
 
 @Injectable()

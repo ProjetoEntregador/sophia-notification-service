@@ -1,4 +1,20 @@
-// Re-export do pgTable. Quando todas as features estiverem migradas, podemos
-// mover o pgTable para cá inteiro; por ora referenciamos a localização existente
-// para manter migrations e relations atuais funcionando.
-export { treatments } from '../../../db/schema/treatments';
+import {
+  pgTable,
+  uuid,
+  varchar,
+  integer,
+  timestamp,
+} from 'drizzle-orm/pg-core';
+
+export const treatments = pgTable('treatments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull(),
+  jid: varchar('jid', { length: 255 }).notNull(),
+  intervalHours: integer('interval_hours').notNull(),
+  startTime: timestamp('start_time', {
+    withTimezone: true,
+  }).notNull(),
+  endTime: timestamp('end_time', {
+    withTimezone: true,
+  }).notNull(),
+});

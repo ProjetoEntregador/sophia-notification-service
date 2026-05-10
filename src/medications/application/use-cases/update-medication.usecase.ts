@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Medication } from '../../domain/medication.entity';
 import { MedicationsRepository } from '../../domain/medications.repository.port';
-import { UpdateMedicationInput } from '../../../@types/medications';
+import { UpdateMedicationInput } from '../dtos/medication.input';
 
 @Injectable()
 export class UpdateMedicationUseCase {

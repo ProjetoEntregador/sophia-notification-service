@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { TreatmentDraft } from '../@types';
+import { TreatmentDraft } from '../treatments/adapters/in/whatsapp/types/treatment-flow.types';
 
 export function parseBrDate(input: string): Date | null {
   const match = /^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2})$/.exec(input);
