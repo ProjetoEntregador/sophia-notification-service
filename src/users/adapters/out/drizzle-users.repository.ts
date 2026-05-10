@@ -6,11 +6,38 @@ import { treatments } from '../../../treatments/adapters/out/treatment.schema';
 import { reminders } from '../../../reminders/adapters/out/reminder.schema';
 import { UsersRepository } from '../../domain/users.repository.port';
 import { UserOverview } from '../../domain/user-overview.type';
+import { User } from 'src/users/domain/user.entity';
+import { users } from './user.schema';
+
+type UserRow = typeof users.$inferSelect;
 
 @Injectable()
 export class DrizzleUsersRepository extends UsersRepository {
   constructor(@Inject(DATABASE) private readonly db: NodePgDatabase) {
     super();
+  }
+
+  async getById(id: string): Promise<User> {
+    const [user] = await this.db.select().from(users).where(eq(users.id, id));
+    return this.toEntity(user);
+  }
+
+  async getByToken(token: string): Promise<User> {
+    const [user] = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.token, token));
+    return this.toEntity(user);
+  }
+
+  async save(user: User): Promise<User> {
+    const row = this.toRow(user);
+    const [saved] = await this.db
+      .insert(users)
+      .values(row)
+      .onConflictDoUpdate({ target: users.id, set: row })
+      .returning();
+    return this.toEntity(saved);
   }
 
   async getOverview(userId: string): Promise<UserOverview> {
@@ -50,5 +77,17 @@ export class DrizzleUsersRepository extends UsersRepository {
     }
 
     return overview;
+  }
+
+  private toEntity(row: UserRow): User {
+    return new User(row.id, row.name, row.token);
+  }
+
+  private toRow(u: User) {
+    return {
+      id: u.id,
+      name: u.name,
+      token: u.token,
+    };
   }
 }
