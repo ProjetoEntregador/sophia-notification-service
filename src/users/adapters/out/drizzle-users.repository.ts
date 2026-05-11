@@ -6,7 +6,7 @@ import { treatments } from '@/treatments/adapters/out/treatment.schema';
 import { reminders } from '@/reminders/adapters/out/reminder.schema';
 import { UsersRepository } from '@/users/domain/users.repository.port';
 import { UserOverview } from '@/users/domain/user-overview.type';
-import { User } from 'src/users/domain/user.entity';
+import { User } from '@/users/domain/user.entity';
 import { users } from './user.schema';
 
 type UserRow = typeof users.$inferSelect;
@@ -17,17 +17,22 @@ export class DrizzleUsersRepository extends UsersRepository {
     super();
   }
 
-  async getById(id: string): Promise<User> {
-    const [user] = await this.db.select().from(users).where(eq(users.id, id));
-    return this.toEntity(user);
+  async findById(id: string): Promise<User | null> {
+    const [row] = await this.db.select().from(users).where(eq(users.id, id));
+    return row ? this.toEntity(row) : null;
   }
 
-  async getByToken(token: string): Promise<User> {
-    const [user] = await this.db
+  async findByJid(jid: string): Promise<User | null> {
+    const [row] = await this.db.select().from(users).where(eq(users.jid, jid));
+    return row ? this.toEntity(row) : null;
+  }
+
+  async findByToken(token: string): Promise<User | null> {
+    const [row] = await this.db
       .select()
       .from(users)
       .where(eq(users.token, token));
-    return this.toEntity(user);
+    return row ? this.toEntity(row) : null;
   }
 
   async save(user: User): Promise<User> {
@@ -80,13 +85,14 @@ export class DrizzleUsersRepository extends UsersRepository {
   }
 
   private toEntity(row: UserRow): User {
-    return new User(row.id, row.name, row.token);
+    return new User(row.id, row.name, row.jid, row.token);
   }
 
   private toRow(u: User) {
     return {
       id: u.id,
       name: u.name,
+      jid: u.jid,
       token: u.token,
     };
   }

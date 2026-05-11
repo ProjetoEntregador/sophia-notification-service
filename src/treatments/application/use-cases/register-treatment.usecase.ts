@@ -39,7 +39,6 @@ export class RegisterTreatmentUseCase {
     const treatment = new Treatment(
       randomUUID(),
       input.userId,
-      input.jid,
       input.intervalHours,
       start,
       end,

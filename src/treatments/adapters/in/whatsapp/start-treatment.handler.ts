@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { ConversationState } from '@/@types';
-import { jidToUserId } from '@/utils/functions';
 import { MessageSender } from '@/shared/ports/message-sender.port';
 import { MessageHandlerInterface } from '@/bot/interfaces/index';
 import { ConversationStateService } from '@/bot/messaging/state/conversation-state.service';
 import { RegisterTreatmentUseCase } from '@/treatments/application/use-cases/register-treatment.usecase';
 import { FindMedicationByNameUseCase } from '@/medications/application/use-cases/find-medication-by-name.usecase';
+import { EnsureUserByJidUseCase } from '@/users/application/use-cases/ensure-user-by-jid.usecase';
 import {
   TreatmentDraft,
   TreatmentStepResult,
@@ -27,6 +27,7 @@ export class StartTreatmentHandler extends MessageHandlerInterface {
     private readonly findMedication: FindMedicationByNameUseCase,
     private readonly state: ConversationStateService,
     private readonly sender: MessageSender,
+    private readonly ensureUser: EnsureUserByJidUseCase,
   ) {
     super();
   }
@@ -114,11 +115,15 @@ export class StartTreatmentHandler extends MessageHandlerInterface {
   }
 
   private async persist(jid: string, draft: TreatmentDraft): Promise<void> {
+    const user = await this.ensureUser.execute(jid);
     const medicationsIds: string[] = [];
 
     if (draft.medications) {
       for (const medicationName of draft.medications) {
-        const matches = await this.findMedication.execute(medicationName, jid);
+        const matches = await this.findMedication.execute(
+          medicationName,
+          user.id,
+        );
 
         if (matches.length != 1) {
           console.log('Erro: É preciso definir qual a medicação a ser tomada.');
@@ -129,8 +134,7 @@ export class StartTreatmentHandler extends MessageHandlerInterface {
     }
 
     await this.registerTreatment.execute({
-      userId: jidToUserId(jid),
-      jid,
+      userId: user.id,
       intervalHours: draft.intervalHours as number,
       startTime: draft.startTime as string,
       endTime: draft.endTime as string,

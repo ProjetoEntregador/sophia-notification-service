@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { UsersModule } from '../users/users.module';
 import { MedicationsRepository } from './domain/medications.repository.port';
 import { DrizzleMedicationsRepository } from './adapters/out/drizzle-medications.repository';
 import { ListMedicationsUseCase } from './application/use-cases/list-medications.usecase';
@@ -10,6 +11,7 @@ import { GetMedicationStatusUseCase } from './application/use-cases/get-medicati
 import { RegisterMedicationTool } from './adapters/in/ai-tools/register-medication.tool';
 
 @Module({
+  imports: [UsersModule],
   providers: [
     { provide: MedicationsRepository, useClass: DrizzleMedicationsRepository },
     ListMedicationsUseCase,

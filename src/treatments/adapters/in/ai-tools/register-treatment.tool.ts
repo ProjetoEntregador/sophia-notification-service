@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { AiToolDefinition } from '@/@types';
-import { jidToUserId } from '@/utils/functions';
 import { AiToolInterface } from '@/bot/ai/interfaces/index';
 import { RegisterTreatmentUseCase } from '@/treatments/application/use-cases/register-treatment.usecase';
 import { FindMedicationByNameUseCase } from '@/medications/application/use-cases/find-medication-by-name.usecase';
+import { EnsureUserByJidUseCase } from '@/users/application/use-cases/ensure-user-by-jid.usecase';
 
 type RegisterTreatmentArgs = {
   medications: string[];
@@ -58,6 +58,7 @@ export class RegisterTreatmentTool extends AiToolInterface {
   constructor(
     private readonly registerTreatment: RegisterTreatmentUseCase,
     private readonly findMedication: FindMedicationByNameUseCase,
+    private readonly ensureUser: EnsureUserByJidUseCase,
   ) {
     super();
   }
@@ -92,10 +93,14 @@ export class RegisterTreatmentTool extends AiToolInterface {
     }
 
     try {
+      const user = await this.ensureUser.execute(jid);
       const medicationsId: string[] = [];
 
       for (const medicationName of input.medications) {
-        const matches = await this.findMedication.execute(medicationName, jid);
+        const matches = await this.findMedication.execute(
+          medicationName,
+          user.id,
+        );
 
         if (matches.length === 0) {
           return `Erro: o medicamento "${medicationName}" não está cadastrado. Cadastre-o primeiro com a ferramenta register_medication antes de iniciar o tratamento.`;
@@ -110,8 +115,7 @@ export class RegisterTreatmentTool extends AiToolInterface {
       }
 
       const treatment = await this.registerTreatment.execute({
-        userId: jidToUserId(jid),
-        jid,
+        userId: user.id,
         intervalHours: input.intervalHours,
         startTime: start.toISOString(),
         endTime: end.toISOString(),

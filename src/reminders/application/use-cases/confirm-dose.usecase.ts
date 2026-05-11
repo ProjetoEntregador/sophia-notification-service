@@ -3,6 +3,7 @@ import { Clock } from '@/shared/ports/clock.port';
 import { Reminder } from '@/reminders/domain/reminder.entity';
 import { CreateNextReminderUseCase } from './create-next-reminder.usecase';
 import { RemindersRepository } from '@/reminders/domain/reminders.repository.port';
+import { EnsureUserByJidUseCase } from '@/users/application/use-cases/ensure-user-by-jid.usecase';
 
 @Injectable()
 export class ConfirmDoseUseCase {
@@ -10,6 +11,7 @@ export class ConfirmDoseUseCase {
     private readonly reminders: RemindersRepository,
     private readonly clock: Clock,
     private readonly createNextReminder: CreateNextReminderUseCase,
+    private readonly ensureUser: EnsureUserByJidUseCase,
   ) {}
 
   async byId(id: string): Promise<Reminder> {
@@ -21,9 +23,8 @@ export class ConfirmDoseUseCase {
   }
 
   async byJid(jid: string): Promise<Reminder | null> {
-    // TODO: filtrar por jid quando houver tabela de usuários ligando jid → reminders.
-    void jid;
-    const pending = await this.reminders.findOldestUnresolved();
+    const user = await this.ensureUser.execute(jid);
+    const pending = await this.reminders.findOldestUnresolved(user.id);
     if (!pending) return null;
     return this.confirm(pending);
   }

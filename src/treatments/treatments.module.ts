@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { RemindersModule } from '../reminders/reminders.module';
 import { MedicationsModule } from '../medications/medications.module';
 import { BotModule } from '../bot/bot.module';
+import { UsersModule } from '../users/users.module';
 import { TreatmentsRepository } from './domain/treatment.repository.port';
 import { DrizzleTreatmentsRepository } from './adapters/out/drizzle-treatments.repository';
 import { ListTreatmentsUseCase } from './application/use-cases/list-treatments.usecase';
@@ -16,6 +17,7 @@ import { StartTreatmentHandler } from './adapters/in/whatsapp/start-treatment.ha
     forwardRef(() => RemindersModule),
     MedicationsModule,
     forwardRef(() => BotModule),
+    UsersModule,
   ],
   providers: [
     { provide: TreatmentsRepository, useClass: DrizzleTreatmentsRepository },

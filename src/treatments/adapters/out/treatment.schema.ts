@@ -1,20 +1,12 @@
-import {
-  pgTable,
-  uuid,
-  varchar,
-  integer,
-  timestamp,
-} from 'drizzle-orm/pg-core';
+import { pgTable, uuid, integer, timestamp } from 'drizzle-orm/pg-core';
+import { users } from '@/users/adapters/out/user.schema';
 
 export const treatments = pgTable('treatments', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull(),
-  jid: varchar('jid', { length: 255 }).notNull(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id),
   intervalHours: integer('interval_hours').notNull(),
-  startTime: timestamp('start_time', {
-    withTimezone: true,
-  }).notNull(),
-  endTime: timestamp('end_time', {
-    withTimezone: true,
-  }).notNull(),
+  startTime: timestamp('start_time', { withTimezone: true }).notNull(),
+  endTime: timestamp('end_time', { withTimezone: true }).notNull(),
 });

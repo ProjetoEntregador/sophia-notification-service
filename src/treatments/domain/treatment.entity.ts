@@ -2,7 +2,6 @@ export class Treatment {
   constructor(
     public readonly id: string,
     public readonly userId: string,
-    public readonly jid: string,
     public readonly intervalHours: number,
     public readonly startTime: Date,
     public readonly endTime: Date,
@@ -14,14 +13,13 @@ export class Treatment {
   }
 
   nextDoseAfter(reference: Date): Date {
-    return new Date(reference.getTime() + this.intervalHours * 60 * 60 * 1000); // ms para a próxima dose
+    return new Date(reference.getTime() + this.intervalHours * 60 * 60 * 1000);
   }
 
   withExtendedEndBy(byMs: number): Treatment {
     return new Treatment(
       this.id,
       this.userId,
-      this.jid,
       this.intervalHours,
       this.startTime,
       new Date(this.endTime.getTime() + byMs),
@@ -33,7 +31,6 @@ export class Treatment {
     return new Treatment(
       this.id,
       this.userId,
-      this.jid,
       this.intervalHours,
       this.startTime,
       this.endTime,
