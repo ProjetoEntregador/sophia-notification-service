@@ -2,15 +2,47 @@ import { Inject, Injectable } from '@nestjs/common';
 import { eq, sql } from 'drizzle-orm';
 import { DATABASE } from '@/db/database.module';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { UserOverview } from '@/users/domain/user-overview.type';
+import { treatments } from '@/treatments/adapters/out/treatment.schema';
 import { reminders } from '@/reminders/adapters/out/reminder.schema';
 import { UsersRepository } from '@/users/domain/users.repository.port';
-import { treatments } from '@/treatments/adapters/out/treatment.schema';
+import { UserOverview } from '@/users/domain/user-overview.type';
+import { User } from '@/users/domain/user.entity';
+import { users } from './user.schema';
+
+type UserRow = typeof users.$inferSelect;
 
 @Injectable()
 export class DrizzleUsersRepository extends UsersRepository {
   constructor(@Inject(DATABASE) private readonly db: NodePgDatabase) {
     super();
+  }
+
+  async findById(id: string): Promise<User | null> {
+    const [row] = await this.db.select().from(users).where(eq(users.id, id));
+    return row ? this.toEntity(row) : null;
+  }
+
+  async findByJid(jid: string): Promise<User | null> {
+    const [row] = await this.db.select().from(users).where(eq(users.jid, jid));
+    return row ? this.toEntity(row) : null;
+  }
+
+  async findByToken(token: string): Promise<User | null> {
+    const [row] = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.token, token));
+    return row ? this.toEntity(row) : null;
+  }
+
+  async save(user: User): Promise<User> {
+    const row = this.toRow(user);
+    const [saved] = await this.db
+      .insert(users)
+      .values(row)
+      .onConflictDoUpdate({ target: users.id, set: row })
+      .returning();
+    return this.toEntity(saved);
   }
 
   async getOverview(userId: string): Promise<UserOverview> {
@@ -50,5 +82,18 @@ export class DrizzleUsersRepository extends UsersRepository {
     }
 
     return overview;
+  }
+
+  private toEntity(row: UserRow): User {
+    return new User(row.id, row.name, row.jid, row.token);
+  }
+
+  private toRow(u: User) {
+    return {
+      id: u.id,
+      name: u.name,
+      jid: u.jid,
+      token: u.token,
+    };
   }
 }

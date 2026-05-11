@@ -3,12 +3,14 @@ import { and, asc, desc, eq, gte, isNull, lt, lte } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { reminders } from './reminder.schema';
 import { DATABASE } from '@/db/database.module';
-import { treatments } from '@/db/schema/treatments';
-import { medications } from '@/db/schema/medications';
+import { treatments } from '@/treatments/adapters/out/treatment.schema';
+import { medications } from '@/medications/adapters/out/medication.schema';
+import { users } from '@/users/adapters/out/user.schema';
 import { Reminder } from '@/reminders/domain/reminder.entity';
 import { RemindersRepository } from '@/reminders/domain/reminders.repository.port';
 import { DueReminderProjection } from '@/reminders/domain/due-reminder.projection';
 import { treatmentsToMedications } from '@/treatments/adapters/out/treatment-medication-link.schema';
+
 type ReminderRow = typeof reminders.$inferSelect;
 
 type DueRow = {
@@ -78,11 +80,35 @@ export class DrizzleRemindersRepository extends RemindersRepository {
     return rows.map((r) => this.toEntity(r));
   }
 
-  async findOldestUnresolved(): Promise<Reminder | null> {
+  async findOldestUnresolved(userId?: string): Promise<Reminder | null> {
+    const baseConditions = [
+      eq(reminders.sent, true),
+      isNull(reminders.confirmed),
+    ];
+
+    if (userId) {
+      const rows = await this.db
+        .select({
+          id: reminders.id,
+          treatmentId: reminders.treatmentId,
+          scheduledTime: reminders.scheduledTime,
+          sent: reminders.sent,
+          sentAt: reminders.sentAt,
+          confirmed: reminders.confirmed,
+          confirmedAt: reminders.confirmedAt,
+        })
+        .from(reminders)
+        .innerJoin(treatments, eq(treatments.id, reminders.treatmentId))
+        .where(and(...baseConditions, eq(treatments.userId, userId)))
+        .orderBy(asc(reminders.sentAt))
+        .limit(1);
+      return rows[0] ? this.toEntity(rows[0]) : null;
+    }
+
     const [row] = await this.db
       .select()
       .from(reminders)
-      .where(and(eq(reminders.sent, true), isNull(reminders.confirmed)))
+      .where(and(...baseConditions))
       .orderBy(asc(reminders.sentAt))
       .limit(1);
     return row ? this.toEntity(row) : null;
@@ -109,11 +135,12 @@ export class DrizzleRemindersRepository extends RemindersRepository {
         reminderId: reminders.id,
         treatmentId: reminders.treatmentId,
         scheduledTime: reminders.scheduledTime,
-        jid: treatments.jid,
+        jid: users.jid,
         medicationName: medications.name,
       })
       .from(reminders)
       .innerJoin(treatments, eq(treatments.id, reminders.treatmentId))
+      .innerJoin(users, eq(users.id, treatments.userId))
       .innerJoin(
         treatmentsToMedications,
         eq(treatmentsToMedications.treatmentId, treatments.id),
@@ -182,7 +209,6 @@ export class DrizzleRemindersRepository extends RemindersRepository {
 
     for (const r of rows) {
       const existing = grouped.get(r.reminderId);
-
       if (existing) {
         existing.medicationNames.push(r.medicationName);
       } else {

@@ -3,14 +3,13 @@ import { eq } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DATABASE } from '@/db/database.module';
 import { medications } from './medication.schema';
-import { treatments } from '@/db/schema/treatments';
+import { treatments } from '@/treatments/adapters/out/treatment.schema';
 import { Treatment } from '@/treatments/domain/treatment.entity';
 import { Medication } from '@/medications/domain/medication.entity';
 import { MedicationsRepository } from '@/medications/domain/medications.repository.port';
 import { treatmentsToMedications } from '@/treatments/adapters/out/treatment-medication-link.schema';
 
 type MedicationRow = typeof medications.$inferSelect;
-type TreatmentRow = typeof treatments.$inferSelect;
 
 @Injectable()
 export class DrizzleMedicationsRepository extends MedicationsRepository {
@@ -31,20 +30,19 @@ export class DrizzleMedicationsRepository extends MedicationsRepository {
     return row ? this.toEntity(row) : null;
   }
 
-  async findByJid(jid: string): Promise<Medication[]> {
+  async findByUserId(userId: string): Promise<Medication[]> {
     const rows = await this.db
       .select()
       .from(medications)
-      .where(eq(medications.jid, jid));
+      .where(eq(medications.userId, userId));
     return rows.map((r) => this.toEntity(r));
   }
 
   async findTreatmentsOf(medicationId: string): Promise<Treatment[]> {
-    const rows: TreatmentRow[] = await this.db
+    const rows = await this.db
       .select({
         id: treatments.id,
         userId: treatments.userId,
-        jid: treatments.jid,
         intervalHours: treatments.intervalHours,
         startTime: treatments.startTime,
         endTime: treatments.endTime,
@@ -58,15 +56,9 @@ export class DrizzleMedicationsRepository extends MedicationsRepository {
 
     return rows.map(
       (r) =>
-        new Treatment(
-          r.id,
-          r.userId,
-          r.jid,
-          r.intervalHours,
-          r.startTime,
-          r.endTime,
-          [medicationId],
-        ),
+        new Treatment(r.id, r.userId, r.intervalHours, r.startTime, r.endTime, [
+          medicationId,
+        ]),
     );
   }
 
@@ -94,14 +86,13 @@ export class DrizzleMedicationsRepository extends MedicationsRepository {
   }
 
   private toEntity(row: MedicationRow): Medication {
-    return new Medication(row.id, row.userId, row.jid, row.name, row.quantity);
+    return new Medication(row.id, row.userId, row.name, row.quantity);
   }
 
   private toRow(m: Medication) {
     return {
       id: m.id,
       userId: m.userId,
-      jid: m.jid,
       name: m.name,
       quantity: m.quantity,
     };

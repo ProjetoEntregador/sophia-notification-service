@@ -2,7 +2,6 @@ export class Medication {
   constructor(
     public readonly id: string,
     public readonly userId: string,
-    public readonly jid: string,
     public readonly name: string,
     public readonly quantity: number,
   ) {}
@@ -14,6 +13,6 @@ export class Medication {
   }
 
   withQuantity(quantity: number): Medication {
-    return new Medication(this.id, this.userId, this.jid, this.name, quantity);
+    return new Medication(this.id, this.userId, this.name, quantity);
   }
 }

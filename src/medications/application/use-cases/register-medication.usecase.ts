@@ -19,7 +19,6 @@ export class RegisterMedicationUseCase {
     const medication = new Medication(
       randomUUID(),
       input.userId,
-      input.jid,
       input.name.trim(),
       input.quantity,
     );

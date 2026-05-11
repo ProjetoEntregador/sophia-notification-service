@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { BotModule } from '../bot/bot.module';
 import { TreatmentsModule } from '../treatments/treatments.module';
+import { UsersModule } from '../users/users.module';
 import { Clock } from '../shared/ports/clock.port';
 import { SystemClockAdapter } from '../shared/adapters/system-clock.adapter';
 
@@ -24,7 +25,11 @@ import { ConfirmDoseHandler } from './adapters/in/whatsapp/confirm-dose.handler'
 import { SkipDoseHandler } from './adapters/in/whatsapp/skip-dose.handler';
 
 @Module({
-  imports: [forwardRef(() => BotModule), forwardRef(() => TreatmentsModule)],
+  imports: [
+    forwardRef(() => BotModule),
+    forwardRef(() => TreatmentsModule),
+    UsersModule,
+  ],
   providers: [
     { provide: RemindersRepository, useClass: DrizzleRemindersRepository },
     { provide: Clock, useClass: SystemClockAdapter },

@@ -6,7 +6,7 @@ export abstract class RemindersRepository {
   abstract findById(id: string): Promise<Reminder | null>;
   abstract findInDay(day: Date): Promise<Reminder[]>;
   abstract findInDateRange(start: Date, end: Date): Promise<Reminder[]>;
-  abstract findOldestUnresolved(): Promise<Reminder | null>;
+  abstract findOldestUnresolved(userId?: string): Promise<Reminder | null>;
   abstract findExpired(now: Date, graceMinutes: number): Promise<Reminder[]>;
   abstract findDue(now: Date): Promise<DueReminderProjection[]>;
 

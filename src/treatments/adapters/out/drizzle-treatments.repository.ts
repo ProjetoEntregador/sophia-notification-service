@@ -77,7 +77,6 @@ export class DrizzleTreatmentsRepository extends TreatmentsRepository {
     return new Treatment(
       row.id,
       row.userId,
-      row.jid,
       row.intervalHours,
       row.startTime,
       row.endTime,
@@ -89,7 +88,6 @@ export class DrizzleTreatmentsRepository extends TreatmentsRepository {
     return {
       id: t.id,
       userId: t.userId,
-      jid: t.jid,
       intervalHours: t.intervalHours,
       startTime: t.startTime,
       endTime: t.endTime,

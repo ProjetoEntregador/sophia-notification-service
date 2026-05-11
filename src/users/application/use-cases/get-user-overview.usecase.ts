@@ -6,7 +6,7 @@ import { UsersRepository } from '@/users/domain/users.repository.port';
 export class GetUserOverviewUseCase {
   constructor(private readonly users: UsersRepository) {}
 
-  execute(userId: string): Promise<UserOverview> {
-    return this.users.getOverview(userId);
+  async execute(userId: string): Promise<UserOverview> {
+    return await this.users.getOverview(userId);
   }
 }

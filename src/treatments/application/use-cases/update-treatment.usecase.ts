@@ -14,7 +14,6 @@ export class UpdateTreatmentUseCase {
     const merged = new Treatment(
       current.id,
       input.userId ?? current.userId,
-      input.jid ?? current.jid,
       input.intervalHours ?? current.intervalHours,
       input.startTime ? new Date(input.startTime) : current.startTime,
       input.endTime ? new Date(input.endTime) : current.endTime,
