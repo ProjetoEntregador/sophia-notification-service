@@ -9,7 +9,16 @@ import { ListTreatmentsUseCase } from './application/use-cases/list-treatments.u
 import { RegisterTreatmentUseCase } from './application/use-cases/register-treatment.usecase';
 import { UpdateTreatmentUseCase } from './application/use-cases/update-treatment.usecase';
 import { DeleteTreatmentUseCase } from './application/use-cases/delete-treatment.usecase';
+import { ListUserTreatmentsUseCase } from './application/use-cases/list-user-treatments.usecase';
+import { FindTreatmentByMedicationNameUseCase } from './application/use-cases/find-treatment-by-medication-name.usecase';
+import { GetTreatmentSummaryUseCase } from './application/use-cases/get-treatment-summary.usecase';
+import { UpdateTreatmentIntervalUseCase } from './application/use-cases/update-treatment-interval.usecase';
+import { UpdateTreatmentEndDateUseCase } from './application/use-cases/update-treatment-end-date.usecase';
+import { CancelTreatmentUseCase } from './application/use-cases/cancel-treatment.usecase';
 import { RegisterTreatmentTool } from './adapters/in/ai-tools/register-treatment.tool';
+import { ListMyTreatmentsTool } from './adapters/in/ai-tools/list-my-treatments.tool';
+import { UpdateTreatmentTool } from './adapters/in/ai-tools/update-treatment.tool';
+import { CancelTreatmentTool } from './adapters/in/ai-tools/cancel-treatment.tool';
 import { StartTreatmentHandler } from './adapters/in/whatsapp/start-treatment.handler';
 
 @Module({
@@ -25,7 +34,16 @@ import { StartTreatmentHandler } from './adapters/in/whatsapp/start-treatment.ha
     RegisterTreatmentUseCase,
     UpdateTreatmentUseCase,
     DeleteTreatmentUseCase,
+    ListUserTreatmentsUseCase,
+    FindTreatmentByMedicationNameUseCase,
+    GetTreatmentSummaryUseCase,
+    UpdateTreatmentIntervalUseCase,
+    UpdateTreatmentEndDateUseCase,
+    CancelTreatmentUseCase,
     RegisterTreatmentTool,
+    ListMyTreatmentsTool,
+    UpdateTreatmentTool,
+    CancelTreatmentTool,
     StartTreatmentHandler,
   ],
   exports: [
@@ -33,6 +51,9 @@ import { StartTreatmentHandler } from './adapters/in/whatsapp/start-treatment.ha
     RegisterTreatmentUseCase,
     ListTreatmentsUseCase,
     RegisterTreatmentTool,
+    ListMyTreatmentsTool,
+    UpdateTreatmentTool,
+    CancelTreatmentTool,
     StartTreatmentHandler,
   ],
 })

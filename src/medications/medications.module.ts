@@ -8,7 +8,9 @@ import { UpdateMedicationUseCase } from './application/use-cases/update-medicati
 import { DeleteMedicationUseCase } from './application/use-cases/delete-medication.usecase';
 import { FindMedicationByNameUseCase } from './application/use-cases/find-medication-by-name.usecase';
 import { GetMedicationStatusUseCase } from './application/use-cases/get-medication-status.usecase';
+import { UpdateMedicationQuantityUseCase } from './application/use-cases/update-medication-quantity.usecase';
 import { RegisterMedicationTool } from './adapters/in/ai-tools/register-medication.tool';
+import { UpdateMedicationQuantityTool } from './adapters/in/ai-tools/update-medication-quantity.tool';
 
 @Module({
   imports: [UsersModule],
@@ -20,14 +22,18 @@ import { RegisterMedicationTool } from './adapters/in/ai-tools/register-medicati
     DeleteMedicationUseCase,
     FindMedicationByNameUseCase,
     GetMedicationStatusUseCase,
+    UpdateMedicationQuantityUseCase,
     RegisterMedicationTool,
+    UpdateMedicationQuantityTool,
   ],
   exports: [
+    MedicationsRepository,
     RegisterMedicationUseCase,
     FindMedicationByNameUseCase,
     GetMedicationStatusUseCase,
     ListMedicationsUseCase,
     RegisterMedicationTool,
+    UpdateMedicationQuantityTool,
   ],
 })
 export class MedicationsModule {}

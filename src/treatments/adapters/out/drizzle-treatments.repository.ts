@@ -28,6 +28,14 @@ export class DrizzleTreatmentsRepository extends TreatmentsRepository {
     return row ? this.toEntity(row) : null;
   }
 
+  async findByUserId(userId: string): Promise<Treatment[]> {
+    const rows = await this.db
+      .select()
+      .from(treatments)
+      .where(eq(treatments.userId, userId));
+    return Promise.all(rows.map((r) => this.toEntity(r)));
+  }
+
   async save(treatment: Treatment): Promise<Treatment> {
     return this.db.transaction(async (tx) => {
       const row = this.toRow(treatment);
