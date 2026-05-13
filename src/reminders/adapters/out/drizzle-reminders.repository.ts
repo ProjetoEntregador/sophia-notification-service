@@ -168,6 +168,82 @@ export class DrizzleRemindersRepository extends RemindersRepository {
     );
   }
 
+  async findByUserIdAndDay(userId: string, day: Date): Promise<Reminder[]> {
+    const start = new Date(day);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(day);
+    end.setHours(23, 59, 59, 999);
+
+    const rows = await this.db
+      .select({
+        id: reminders.id,
+        treatmentId: reminders.treatmentId,
+        scheduledTime: reminders.scheduledTime,
+        sent: reminders.sent,
+        sentAt: reminders.sentAt,
+        confirmed: reminders.confirmed,
+        confirmedAt: reminders.confirmedAt,
+      })
+      .from(reminders)
+      .innerJoin(treatments, eq(treatments.id, reminders.treatmentId))
+      .where(
+        and(
+          eq(treatments.userId, userId),
+          lte(reminders.scheduledTime, end),
+          gte(reminders.scheduledTime, start),
+        ),
+      )
+      .orderBy(asc(reminders.scheduledTime));
+    return rows.map((r) => this.toEntity(r));
+  }
+
+  async findUpcomingByUserId(
+    userId: string,
+    from: Date,
+    until: Date,
+  ): Promise<Reminder[]> {
+    const rows = await this.db
+      .select({
+        id: reminders.id,
+        treatmentId: reminders.treatmentId,
+        scheduledTime: reminders.scheduledTime,
+        sent: reminders.sent,
+        sentAt: reminders.sentAt,
+        confirmed: reminders.confirmed,
+        confirmedAt: reminders.confirmedAt,
+      })
+      .from(reminders)
+      .innerJoin(treatments, eq(treatments.id, reminders.treatmentId))
+      .where(
+        and(
+          eq(treatments.userId, userId),
+          gte(reminders.scheduledTime, from),
+          lte(reminders.scheduledTime, until),
+        ),
+      )
+      .orderBy(asc(reminders.scheduledTime));
+    return rows.map((r) => this.toEntity(r));
+  }
+
+  async findByTreatmentId(treatmentId: string): Promise<Reminder[]> {
+    const rows = await this.db
+      .select()
+      .from(reminders)
+      .where(eq(reminders.treatmentId, treatmentId))
+      .orderBy(asc(reminders.scheduledTime));
+    return rows.map((r) => this.toEntity(r));
+  }
+
+  async deleteFutureUnsentByTreatmentId(treatmentId: string): Promise<number> {
+    const result = await this.db
+      .delete(reminders)
+      .where(
+        and(eq(reminders.treatmentId, treatmentId), eq(reminders.sent, false)),
+      )
+      .returning({ id: reminders.id });
+    return result.length;
+  }
+
   async save(reminder: Reminder): Promise<Reminder> {
     const row = this.toRow(reminder);
     const [saved] = await this.db

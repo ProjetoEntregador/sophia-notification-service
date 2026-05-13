@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DATABASE } from '@/db/database.module';
 import { medications } from './medication.schema';
@@ -35,6 +35,15 @@ export class DrizzleMedicationsRepository extends MedicationsRepository {
       .select()
       .from(medications)
       .where(eq(medications.userId, userId));
+    return rows.map((r) => this.toEntity(r));
+  }
+
+  async findByIds(ids: string[]): Promise<Medication[]> {
+    if (ids.length === 0) return [];
+    const rows = await this.db
+      .select()
+      .from(medications)
+      .where(inArray(medications.id, ids));
     return rows.map((r) => this.toEntity(r));
   }
 
