@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common';
-import { PublisherService } from './publisher.service';
-import { PublisherController } from './publisher.controller';
+import { IncomingService } from './incoming.service';
+import { OutgoingService } from './outgoing.service';
 
 @Module({
-  controllers: [PublisherController],
-  providers: [PublisherService],
-  exports: [PublisherService],
+  providers: [IncomingService, OutgoingService],
+  exports: [IncomingService, OutgoingService],
 })
 export class PublisherModule {}

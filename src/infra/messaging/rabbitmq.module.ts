@@ -1,19 +1,35 @@
 import { Global, Module } from '@nestjs/common';
 import { ClientProxyFactory, Transport } from '@nestjs/microservices';
 
-export const RABBITMQ_SERVICE = 'RABBITMQ_SERVICE';
+export const INCOMING_QUEUE = 'INCOMING_QUEUE';
+export const OUTGOING_QUEUE = 'OUTGOING_QUEUE';
 
 @Global()
 @Module({
   providers: [
     {
-      provide: RABBITMQ_SERVICE,
+      provide: INCOMING_QUEUE,
       useFactory: () => {
         return ClientProxyFactory.create({
           transport: Transport.RMQ,
           options: {
             urls: [process.env.MESSAGE_SERVICE_URL!],
-            queue: process.env.MESSAGE_SERVICE_QUEUE!,
+            queue: 'incoming_messages',
+            queueOptions: {
+              durable: true,
+            },
+          },
+        });
+      },
+    },
+    {
+      provide: OUTGOING_QUEUE,
+      useFactory: () => {
+        return ClientProxyFactory.create({
+          transport: Transport.RMQ,
+          options: {
+            urls: [process.env.MESSAGE_SERVICE_URL!],
+            queue: 'outgoing_messages',
             queueOptions: {
               durable: true,
             },
@@ -22,6 +38,6 @@ export const RABBITMQ_SERVICE = 'RABBITMQ_SERVICE';
       },
     },
   ],
-  exports: [RABBITMQ_SERVICE],
+  exports: [INCOMING_QUEUE, OUTGOING_QUEUE],
 })
 export class RabbitmqModule {}

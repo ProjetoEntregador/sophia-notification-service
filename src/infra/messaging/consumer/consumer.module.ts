@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
-import { ConsumerController } from './consumer.controller';
-import { ConsumerService } from './consumer.service';
+import { OutgoingService } from '../publisher/outgoing.service';
+import { OutgoingController } from './outgoing.controller';
+import { IncomingController } from './incoming.controller';
 
 @Module({
-  controllers: [ConsumerController],
-  providers: [ConsumerService],
-  exports: [ConsumerService],
+  controllers: [OutgoingController, IncomingController],
+  providers: [OutgoingService],
+  exports: [OutgoingService],
 })
 export class ConsumerModule {}
