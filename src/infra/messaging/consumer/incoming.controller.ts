@@ -1,10 +1,10 @@
 import { Controller } from '@nestjs/common';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
-import { OutgoingService } from '../publisher/outgoing.service';
+import { MessageRouterInterface } from '@/bot/interfaces';
 
 @Controller()
 export class IncomingController {
-  constructor(private readonly outgoingService: OutgoingService) {}
+  constructor(private readonly router: MessageRouterInterface) {}
 
   @EventPattern('whatsapp.incoming')
   handleIncomingMessage(
@@ -15,9 +15,7 @@ export class IncomingController {
     const originalMsg = context.getMessage();
 
     try {
-      // processamento
-
-      this.outgoingService.handleMessage(data);
+      void this.router.route(data.from, data.text);
 
       channel.ack(originalMsg);
     } catch (err) {

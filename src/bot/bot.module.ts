@@ -24,6 +24,7 @@ import { AiToolsRegistry } from './ai/ai-tools.registry';
 import { LocalAiService } from './ai/local-ai.service';
 import { AiServiceInterface } from './ai/interfaces/index';
 import { MessageSender } from '@/shared/ports/message-sender.port';
+import { IncomingService } from '@/infra/messaging/publisher/incoming.service';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { MessageSender } from '@/shared/ports/message-sender.port';
     BotService,
     MessageService,
     ConversationStateService,
+    IncomingService,
 
     ChatHistoryService,
     AiToolsRegistry,
@@ -60,6 +62,11 @@ import { MessageSender } from '@/shared/ports/message-sender.port';
     { provide: QrCodePresenterInterface, useClass: QrCodeTerminalPresenter },
     { provide: MessageSender, useClass: MessageService },
   ],
-  exports: [WhatsAppSessionService, MessageSender, ConversationStateService],
+  exports: [
+    WhatsAppSessionService,
+    MessageSender,
+    ConversationStateService,
+    { provide: MessageRouterInterface, useExisting: MessageRouter },
+  ],
 })
 export class BotModule {}

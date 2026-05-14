@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
-import { OutgoingService } from '../publisher/outgoing.service';
-import { OutgoingController } from './outgoing.controller';
 import { IncomingController } from './incoming.controller';
+import { MedicationsModule } from '@/medications/medications.module';
+import { BotModule } from '@/bot/bot.module';
 
 @Module({
-  controllers: [OutgoingController, IncomingController],
-  providers: [OutgoingService],
-  exports: [OutgoingService],
+  imports: [MedicationsModule, BotModule],
+  controllers: [IncomingController],
 })
 export class ConsumerModule {}

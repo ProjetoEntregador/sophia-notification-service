@@ -6,11 +6,9 @@ import {
   WAMessage,
   WASocket,
 } from 'baileys';
-import {
-  MessageRouterInterface,
-  QrCodePresenterInterface,
-} from '../interfaces/index';
+import { QrCodePresenterInterface } from '../interfaces/index';
 import { WhatsAppConnectionService } from './whatsapp-connection.service';
+import { IncomingService } from '@/infra/messaging/publisher/incoming.service';
 
 @Injectable()
 export class WhatsAppSessionService {
@@ -18,8 +16,8 @@ export class WhatsAppSessionService {
 
   constructor(
     private readonly connection: WhatsAppConnectionService,
+    private readonly incomingService: IncomingService,
     private readonly qrPresenter: QrCodePresenterInterface,
-    private readonly router: MessageRouterInterface,
   ) {}
 
   async start(): Promise<void> {
@@ -71,7 +69,10 @@ export class WhatsAppSessionService {
 
       if (!text) return;
 
-      void this.router.route(from, text);
+      this.incomingService.handleMessage({
+        from,
+        text,
+      });
     });
   }
 
