@@ -6,11 +6,11 @@ import { ChannelWrapper } from 'amqp-connection-manager';
 
 import { ConfirmChannel } from 'amqplib';
 
-import { EXCHANGES, QUEUES, ROUTING_KEYS } from './rabbitmq.constants';
+import { NotificationEventPayload, PharmacyEventPayload } from '@/@types';
 
 @Injectable()
 export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
-  private connection = amqp.connect(['amqp://admin:admin@rabbitmq:5672']);
+  private connection = amqp.connect([process.env.MESSAGE_SERVICE_URL]);
   public internalChannel: ChannelWrapper;
   public outboundChannel: ChannelWrapper;
   public inboundChannel: ChannelWrapper;
@@ -24,21 +24,25 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
   private setupInternalChannel() {
     this.internalChannel = this.connection.createChannel({
       setup: async (channel: ConfirmChannel) => {
-        await channel.assertExchange(EXCHANGES.INTERNAL, 'topic', {
-          durable: true,
-        });
+        await channel.assertExchange(
+          process.env.MESSAGE_EXCHANGES_NOTIFICATION,
+          'topic',
+          {
+            durable: true,
+          },
+        );
 
-        await channel.assertQueue(QUEUES.INTERNAL_PROCESSING, {
+        await channel.assertQueue(process.env.MESSAGE_NOTIFICATION_QUEUE, {
           durable: true,
         });
 
         await channel.bindQueue(
-          QUEUES.INTERNAL_PROCESSING,
-          EXCHANGES.INTERNAL,
-          ROUTING_KEYS.INTERNAL_EVENT,
+          process.env.MESSAGE_NOTIFICATION_QUEUE,
+          process.env.MESSAGE_EXCHANGES_NOTIFICATION,
+          process.env.MESSAGE_NOTIFICATION_ROUTING_KEY,
         );
 
-        channel.prefetch(1);
+        channel.prefetch(20);
       },
     });
   }
@@ -48,9 +52,13 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
       json: true,
 
       setup: async (channel: ConfirmChannel) => {
-        await channel.assertExchange(EXCHANGES.OUTBOUND, 'topic', {
-          durable: true,
-        });
+        await channel.assertExchange(
+          process.env.MESSAGE_EXCHANGES_PHARMACY,
+          'topic',
+          {
+            durable: true,
+          },
+        );
       },
     });
   }
@@ -58,37 +66,41 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
   private setupInboundChannel() {
     this.inboundChannel = this.connection.createChannel({
       setup: async (channel: ConfirmChannel) => {
-        await channel.assertExchange(EXCHANGES.INBOUND, 'topic', {
-          durable: true,
-        });
+        await channel.assertExchange(
+          process.env.MESSAGE_EXCHANGES_PHARMACY,
+          'topic',
+          {
+            durable: true,
+          },
+        );
 
-        await channel.assertQueue(QUEUES.NEST_INCOMING, {
+        await channel.assertQueue(process.env.MESSAGE_PHARMACY_OUTGOING_QUEUE, {
           durable: true,
         });
 
         await channel.bindQueue(
-          QUEUES.NEST_INCOMING,
-          EXCHANGES.INBOUND,
-          ROUTING_KEYS.NEST_EVENT,
+          process.env.MESSAGE_PHARMACY_OUTGOING_QUEUE,
+          process.env.MESSAGE_EXCHANGES_PHARMACY,
+          process.env.MESSAGE_PHARMACY_OUTGOING_ROUTING_KEY,
         );
 
-        channel.prefetch(1);
+        channel.prefetch(20);
       },
     });
   }
 
-  async publishInternalEvent(payload: unknown) {
+  async publishInternalEvent(payload: NotificationEventPayload) {
     await this.internalChannel.publish(
-      EXCHANGES.INTERNAL,
-      ROUTING_KEYS.INTERNAL_EVENT,
+      process.env.MESSAGE_EXCHANGES_NOTIFICATION!,
+      process.env.MESSAGE_NOTIFICATION_ROUTING_KEY!,
       Buffer.from(JSON.stringify(payload)),
     );
   }
 
-  async publishToSpring(payload: unknown) {
+  async publishToSpring(payload: PharmacyEventPayload) {
     await this.outboundChannel.publish(
-      EXCHANGES.OUTBOUND,
-      ROUTING_KEYS.SPRING_EVENT,
+      process.env.MESSAGE_EXCHANGES_PHARMACY!,
+      process.env.MESSAGE_PHARMACY_INCOMING_ROUTING_KEY!,
       Buffer.from(JSON.stringify(payload)),
     );
   }

@@ -8,12 +8,12 @@ export class TesteController {
   @Post('teste')
   async handleIncomingMessage(@Body() data: Record<string, string>) {
     console.log('TESTE');
-    await this.client.publishToSpring(data);
+    await this.client.publishToSpring(data as never);
   }
 
   @Post('teste-1')
   async handleIncomingMessage2(@Body() data: Record<string, string>) {
     console.log('TESTE 2');
-    await this.client.publishInternalEvent(data);
+    await this.client.publishInternalEvent(data as never);
   }
 }

@@ -3,34 +3,41 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfirmChannel } from 'amqplib';
 
 import { RabbitMQService } from './rabbitmq.service';
-import { QUEUES } from './rabbitmq.constants';
+import { MessageRouterInterface } from '@/bot/interfaces';
 
 @Injectable()
 export class InternalConsumer implements OnModuleInit {
-  constructor(private readonly rabbitmq: RabbitMQService) {}
+  constructor(
+    private readonly rabbitmq: RabbitMQService,
+    private readonly router: MessageRouterInterface,
+  ) {}
 
   async onModuleInit() {
     await this.rabbitmq.internalChannel.addSetup(
       async (channel: ConfirmChannel) => {
-        await channel.assertQueue(QUEUES.INTERNAL_PROCESSING, {
+        await channel.assertQueue(process.env.MESSAGE_NOTIFICATION_QUEUE, {
           durable: true,
         });
 
-        await channel.consume(QUEUES.INTERNAL_PROCESSING, async (msg) => {
-          if (!msg) return;
+        await channel.consume(
+          process.env.MESSAGE_NOTIFICATION_QUEUE,
+          async (msg) => {
+            if (!msg) return;
 
-          try {
-            const data = JSON.parse(msg.content.toString());
+            try {
+              const data = JSON.parse(msg.content.toString());
 
-            console.log('Internal - ', data);
+              void this.router.route(data.from, data.text);
+              console.log('Internal - ', data);
 
-            channel.ack(msg);
-          } catch (error) {
-            console.error(error);
+              channel.ack(msg);
+            } catch (error) {
+              console.error(error);
 
-            channel.nack(msg, false, false);
-          }
-        });
+              channel.nack(msg, false, true);
+            }
+          },
+        );
       },
     );
   }
