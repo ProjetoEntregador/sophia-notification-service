@@ -24,7 +24,7 @@ import { AiToolsRegistry } from './ai/ai-tools.registry';
 import { LocalAiService } from './ai/local-ai.service';
 import { AiServiceInterface } from './ai/interfaces/index';
 import { MessageSender } from '@/shared/ports/message-sender.port';
-import { IncomingService } from '@/infra/messaging/publisher/incoming.service';
+import { RabbitMQService } from '@/infra/messaging/rabbitmq.service';
 
 @Module({
   imports: [
@@ -40,7 +40,7 @@ import { IncomingService } from '@/infra/messaging/publisher/incoming.service';
     BotService,
     MessageService,
     ConversationStateService,
-    IncomingService,
+    RabbitMQService,
 
     ChatHistoryService,
     AiToolsRegistry,

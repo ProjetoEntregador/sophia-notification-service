@@ -8,7 +8,7 @@ import {
 } from 'baileys';
 import { QrCodePresenterInterface } from '../interfaces/index';
 import { WhatsAppConnectionService } from './whatsapp-connection.service';
-import { IncomingService } from '@/infra/messaging/publisher/incoming.service';
+import { RabbitMQService } from '@/infra/messaging/rabbitmq.service';
 
 @Injectable()
 export class WhatsAppSessionService {
@@ -16,7 +16,7 @@ export class WhatsAppSessionService {
 
   constructor(
     private readonly connection: WhatsAppConnectionService,
-    private readonly incomingService: IncomingService,
+    private readonly incomingService: RabbitMQService,
     private readonly qrPresenter: QrCodePresenterInterface,
   ) {}
 
@@ -69,7 +69,7 @@ export class WhatsAppSessionService {
 
       if (!text) return;
 
-      this.incomingService.handleMessage({
+      void this.incomingService.publishInternalEvent({
         from,
         text,
       });

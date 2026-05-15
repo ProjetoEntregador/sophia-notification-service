@@ -1,27 +1,13 @@
 import { Global, Module } from '@nestjs/common';
-import { ClientProxyFactory, Transport } from '@nestjs/microservices';
-
-export const INCOMING_QUEUE = 'INCOMING_QUEUE';
+import { RabbitMQService } from './rabbitmq.service';
+import { TesteController } from './teste.controller';
+import { IntegrationConsumer } from './integration.consumer';
+import { InternalConsumer } from './internal.consumer';
 
 @Global()
 @Module({
-  providers: [
-    {
-      provide: INCOMING_QUEUE,
-      useFactory: () => {
-        return ClientProxyFactory.create({
-          transport: Transport.RMQ,
-          options: {
-            urls: [process.env.MESSAGE_SERVICE_URL!],
-            queue: process.env.MESSAGE_SERVICE_QUEUE!,
-            queueOptions: {
-              durable: true,
-            },
-          },
-        });
-      },
-    },
-  ],
-  exports: [INCOMING_QUEUE],
+  controllers: [TesteController],
+  providers: [RabbitMQService, IntegrationConsumer, InternalConsumer],
+  exports: [RabbitMQService],
 })
-export class RabbitmqModule {}
+export class RabbitMQModule {}
