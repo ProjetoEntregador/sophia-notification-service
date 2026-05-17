@@ -43,7 +43,7 @@ export class FindNearbyPharmaciesHandler extends MessageHandlerInterface {
     }
 
     this.state.clear(jid);
-    await this.searchAndReply(jid, coords, flowData.radiusMeters);
+    await this.searchAndReply(jid, coords, flowData.radiusKm);
   }
 
   private readActiveFlowData(jid: string): PharmacyFlowData | null {
@@ -63,13 +63,13 @@ export class FindNearbyPharmaciesHandler extends MessageHandlerInterface {
   private async searchAndReply(
     jid: string,
     coords: Coordinates,
-    radiusMeters: number | undefined,
+    radiusKm: number | undefined,
   ): Promise<void> {
     try {
       const pharmacies = await this.findNearby.execute(
         coords.latitude,
         coords.longitude,
-        radiusMeters,
+        radiusKm,
       );
       if (pharmacies.length === 0) {
         await this.replyNoResults(jid);

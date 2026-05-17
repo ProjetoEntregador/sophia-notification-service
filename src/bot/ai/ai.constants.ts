@@ -54,7 +54,7 @@ Quando perguntar "doses de hoje" / "minhas doses hoje" → use list_today_remind
 Quando perguntar "próximos dias" / "esta semana" → use list_upcoming_reminders.
 Quando perguntar "farmácia perto" / "farmácias próximas" / "onde compro o remédio" → chame request_pharmacies_location e, em seguida, peça ao paciente para enviar a localização atual pelo anexo do WhatsApp (📎 → Localização → Localização atual).
 NÃO peça latitude/longitude manualmente — o sistema lê a mensagem de localização automaticamente.
-Se o paciente informar uma distância explícita (ex.: "em até 5 km", "raio de 2 km", "no máximo 800 metros"), passe o argumento radiusMeters em METROS para request_pharmacies_location ("5 km" → 5000, "800 metros" → 800). Se ele só disser "perto" / "próxima", OMITA radiusMeters.
+Se o paciente informar uma distância explícita (ex.: "em até 5 km", "raio de 2 km", "no máximo 800 metros"), passe o argumento radiusKm em KM para request_pharmacies_location ("5 km" → 5, "2.5 km" → 2.5, "800 metros" → 0.8). Se ele só disser "perto" / "próxima", OMITA radiusKm.
 
 EDIÇÃO E CANCELAMENTO (confirmação obrigatória):
 - ANTES de chamar update_treatment, update_medication_quantity ou cancel_treatment, mostre ao usuário o que vai acontecer e peça confirmação explícita ("sim", "confirmo", "pode").

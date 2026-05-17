@@ -15,7 +15,7 @@ export class HttpPharmaciesGateway extends PharmaciesGateway {
   async findNearby(
     latitude: number,
     longitude: number,
-    radiusMeters = 3000,
+    radiusKm = 3,
   ): Promise<Pharmacy[]> {
     if (!this.baseUrl) {
       this.logger.warn(
@@ -27,7 +27,7 @@ export class HttpPharmaciesGateway extends PharmaciesGateway {
     try {
       const { data } = await axios.post<PharmacyResponse>(
         `${this.baseUrl}/nearby`,
-        { latitude, longitude, radiusMeters },
+        { latitude, longitude, radiusKm },
         { timeout: this.timeoutMs },
       );
       return (data.pharmacies ?? []).map(
@@ -35,7 +35,7 @@ export class HttpPharmaciesGateway extends PharmaciesGateway {
           new Pharmacy(
             p.name,
             p.address,
-            p.distanceMeters,
+            p.distanceKm,
             p.latitude,
             p.longitude,
             p.phone ?? null,
@@ -43,11 +43,11 @@ export class HttpPharmaciesGateway extends PharmaciesGateway {
       );
     } catch (err) {
       if (isAxiosError(err)) {
-        const status = err.response?.status ?? 'no-status';
+        const status = err.response?.status ?? 'sem resposta';
         this.logger.error(
           `Falha ao consultar serviço de farmácias (${status}): ${err.message}`,
         );
-        throw new Error(`Serviço de farmácias indisponível (${status})`);
+        throw new Error('serviço de farmácias indisponível');
       }
       throw err;
     }

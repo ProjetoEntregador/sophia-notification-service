@@ -4,6 +4,6 @@ export abstract class PharmaciesGateway {
   abstract findNearby(
     latitude: number,
     longitude: number,
-    radiusMeters?: number,
+    radiusKm?: number,
   ): Promise<Pharmacy[]>;
 }

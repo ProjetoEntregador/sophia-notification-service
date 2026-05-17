@@ -30,6 +30,7 @@ export class AiOrchestratorHandler extends MessageHandlerInterface {
   }
 
   async handle(jid: string, text: string): Promise<void> {
+    const historyLengthBefore = this.history.length(jid);
     this.history.append(jid, { role: 'user', content: text });
 
     try {
@@ -53,12 +54,14 @@ export class AiOrchestratorHandler extends MessageHandlerInterface {
             `Retry após reset também falhou para ${jid}: ${(retryErr as Error).message}`,
             (retryErr as Error).stack,
           );
+          this.history.clear(jid);
         }
       } else {
         this.logger.error(
           `Falha ao chamar IA para ${jid}: ${errorMessage}`,
           (err as Error).stack,
         );
+        this.history.truncate(jid, historyLengthBefore);
       }
 
       await this.sender.typingMessage(jid);

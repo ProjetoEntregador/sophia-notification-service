@@ -1,7 +1,7 @@
 export type PharmacyResponseItem = {
   name: string;
   address: string;
-  distanceMeters: number;
+  distanceKm: number;
   latitude: number;
   longitude: number;
   phone?: string | null;

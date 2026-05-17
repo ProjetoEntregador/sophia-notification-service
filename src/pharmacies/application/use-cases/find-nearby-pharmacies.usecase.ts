@@ -9,7 +9,7 @@ export class FindNearbyPharmaciesUseCase {
   async execute(
     latitude: number,
     longitude: number,
-    radiusMeters = 3000,
+    radiusKm = 3,
   ): Promise<Pharmacy[]> {
     if (
       !Number.isFinite(latitude) ||
@@ -21,6 +21,6 @@ export class FindNearbyPharmaciesUseCase {
     ) {
       throw new BadRequestException('Coordenadas inválidas');
     }
-    return this.gateway.findNearby(latitude, longitude, radiusMeters);
+    return this.gateway.findNearby(latitude, longitude, radiusKm);
   }
 }

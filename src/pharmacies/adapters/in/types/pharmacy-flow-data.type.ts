@@ -1,3 +1,3 @@
 export type PharmacyFlowData = {
-  radiusMeters?: number;
+  radiusKm?: number;
 };
