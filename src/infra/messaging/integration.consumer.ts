@@ -4,6 +4,8 @@ import { ConfirmChannel } from 'amqplib';
 
 import { RabbitMQService } from './rabbitmq.service';
 import { FindNearbyPharmaciesHandler } from '@/pharmacies/adapters/in/whatsapp/find-nearby-pharmacies.handler';
+import { toPharmacy } from '@/pharmacies/adapters/in/messaging/pharmacy-payload.mapper';
+import { PharmacyMessagePayload } from '@/pharmacies/adapters/in/messaging/types/pharmacy-message-payload.type';
 
 @Injectable()
 export class IntegrationConsumer implements OnModuleInit {
@@ -25,12 +27,18 @@ export class IntegrationConsumer implements OnModuleInit {
             if (!msg) return;
 
             try {
-              const { jid, pharmacies } = JSON.parse(msg.content.toString());
+              const payload = JSON.parse(
+                msg.content.toString(),
+              ) as PharmacyMessagePayload;
+              const { jid, pharmacies } = payload;
 
-              if (pharmacies.length === 0) {
+              if (!pharmacies || pharmacies.length === 0) {
                 await this.pharmacyHandler.replyNoResults(jid);
               } else {
-                await this.pharmacyHandler.replyResults(jid, pharmacies);
+                await this.pharmacyHandler.replyResults(
+                  jid,
+                  pharmacies.map(toPharmacy),
+                );
               }
 
               channel.ack(msg);

@@ -4,12 +4,14 @@ import { MessageSender } from '@/shared/ports/message-sender.port';
 import { ConversationStateService } from '@/bot/messaging/state/conversation-state.service';
 import { FindNearbyPharmaciesUseCase } from '@/pharmacies/application/use-cases/find-nearby-pharmacies.usecase';
 import { Pharmacy } from '@/pharmacies/domain/pharmacy.entity';
+import { PharmacyMedication } from '@/pharmacies/domain/pharmacy-medication.entity';
 import { PHARMACY_LOCATION_FLOW } from '../ai-tools/request-pharmacies-location.tool';
 import { PharmacyFlowData } from '../types/pharmacy-flow-data.type';
 import { Coordinates } from './types/coordinates.type';
 
 const LOCATION_PREFIX = '__location__|';
 const MAX_RESULTS = 5;
+const MAX_MEDS_PER_PHARMACY = 5;
 
 @Injectable()
 export class FindNearbyPharmaciesHandler extends MessageHandlerInterface {
@@ -108,12 +110,39 @@ export class FindNearbyPharmaciesHandler extends MessageHandlerInterface {
 
   private formatPharmaciesMessage(pharmacies: Pharmacy[]): string {
     const shown = pharmacies.slice(0, MAX_RESULTS);
-    const lines = shown.map((p, i) => this.formatPharmacyLine(p, i));
-    return `Farmácias próximas (até ${shown.length}):\n\n${lines.join('\n\n')}`;
+    const blocks = shown.map((p, i) => this.formatPharmacyBlock(p, i));
+    return `🏥 *Farmácias próximas* (${shown.length}):\n\n${blocks.join('\n\n')}`;
   }
 
-  private formatPharmacyLine(p: Pharmacy, index: number): string {
+  private formatPharmacyBlock(p: Pharmacy, index: number): string {
+    const header = `${index + 1}. *${p.name}* — ${p.distanceLabel()}`;
+    const location = `   📍 ${p.address}${p.city ? `, ${p.city}` : ''}`;
     const phone = p.phone ? `\n   📞 ${p.phone}` : '';
-    return `${index + 1}. *${p.name}* — ${p.distanceLabel()}\n   ${p.address}${phone}`;
+    const meds = this.formatMedicationsSection(p.medications);
+    return `${header}\n${location}${phone}${meds}`;
+  }
+
+  private formatMedicationsSection(meds: PharmacyMedication[]): string {
+    if (!meds || meds.length === 0) return '';
+    const shown = meds.slice(0, MAX_MEDS_PER_PHARMACY);
+    const rest = meds.length - shown.length;
+    const items = shown.map((m) => this.formatMedicationLine(m));
+    const more = rest > 0 ? `\n      _… e mais ${rest} medicamento(s)_` : '';
+    return `\n   💊 *Disponíveis:*\n${items.join('\n')}${more}`;
+  }
+
+  private formatMedicationLine(m: PharmacyMedication): string {
+    const stripe = m.stripeEmoji();
+    const stripeTag = stripe ? ` ${stripe}` : '';
+    const dosage = m.dosage ? ` ${m.dosage}` : '';
+    const form = m.pharmaceuticalForm ? ` — ${m.pharmaceuticalForm}` : '';
+    const manufacturer = m.manufacturer ? `${m.manufacturer} · ` : '';
+    const prescription = m.prescriptionRequired
+      ? '📋 _receita obrigatória_'
+      : '_venda livre_';
+    return [
+      `      • *${m.name}*${stripeTag}${dosage}${form}`,
+      `        ${manufacturer}${m.priceLabel()} · ${prescription}`,
+    ].join('\n');
   }
 }
