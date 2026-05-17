@@ -67,6 +67,19 @@ export class WhatsAppSessionService {
       const text =
         msg.message.conversation ?? msg.message.extendedTextMessage?.text;
 
+      const location = msg.message.locationMessage;
+      if (
+        location?.degreesLatitude != null &&
+        location?.degreesLongitude != null
+      ) {
+        const payload = `__location__|${location.degreesLatitude}|${location.degreesLongitude}`;
+        void this.incomingService.publishInternalEvent({
+          from,
+          text: payload,
+        });
+        return;
+      }
+
       if (!text) return;
 
       void this.incomingService.publishInternalEvent({

@@ -15,6 +15,7 @@ import { RemindersModule } from '@/reminders/reminders.module';
 import { TreatmentsModule } from '@/treatments/treatments.module';
 import { MedicationsModule } from '@/medications/medications.module';
 import { UsersModule } from '@/users/users.module';
+import { PharmaciesModule } from '@/pharmacies/pharmacies.module';
 import { MessageRouter } from './messaging/message-router.service';
 import { StaticMessageHandlerRegistry } from './messaging/static-message-handler-registry';
 import { ConversationStateService } from './messaging/state/conversation-state.service';
@@ -32,6 +33,7 @@ import { RabbitMQService } from '@/infra/messaging/rabbitmq.service';
     forwardRef(() => TreatmentsModule),
     MedicationsModule,
     forwardRef(() => UsersModule),
+    forwardRef(() => PharmaciesModule),
   ],
   controllers: [BotController],
   providers: [

@@ -22,4 +22,18 @@ export class ChatHistoryService {
   clear(jid: string): void {
     this.histories.delete(jid);
   }
+
+  length(jid: string): number {
+    return this.histories.get(jid)?.length ?? 0;
+  }
+
+  truncate(jid: string, length: number): void {
+    const current = this.histories.get(jid);
+    if (!current) return;
+    if (length <= 0) {
+      this.histories.delete(jid);
+      return;
+    }
+    if (current.length > length) current.length = length;
+  }
 }

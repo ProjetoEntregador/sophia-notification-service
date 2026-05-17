@@ -11,6 +11,7 @@ import { ConfirmDoseTool } from '@/reminders/adapters/in/ai-tools/confirm-dose.t
 import { SkipDoseTool } from '@/reminders/adapters/in/ai-tools/skip-dose.tool';
 import { ListTodayRemindersTool } from '@/reminders/adapters/in/ai-tools/list-today-reminders.tool';
 import { ListUpcomingRemindersTool } from '@/reminders/adapters/in/ai-tools/list-upcoming-reminders.tool';
+import { RequestPharmaciesLocationTool } from '@/pharmacies/adapters/in/ai-tools/request-pharmacies-location.tool';
 
 @Injectable()
 export class AiToolsRegistry {
@@ -28,6 +29,7 @@ export class AiToolsRegistry {
     skipDose: SkipDoseTool,
     listTodayReminders: ListTodayRemindersTool,
     listUpcomingReminders: ListUpcomingRemindersTool,
+    requestPharmaciesLocation: RequestPharmaciesLocationTool,
   ) {
     for (const tool of [
       registerMedication,
@@ -40,6 +42,7 @@ export class AiToolsRegistry {
       skipDose,
       listTodayReminders,
       listUpcomingReminders,
+      requestPharmaciesLocation,
     ]) {
       this.byName.set(tool.definition.name, tool);
     }
