@@ -4,7 +4,8 @@ export type NotificationEventPayload = {
 };
 
 export type PharmacyEventPayload = {
-  longitude: string;
-  latitude: string;
-  radius: number;
+  jid: string;
+  longitude: number;
+  latitude: number;
+  radiusKm: number;
 };

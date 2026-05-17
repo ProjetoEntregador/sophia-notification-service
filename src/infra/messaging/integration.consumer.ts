@@ -3,10 +3,16 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfirmChannel } from 'amqplib';
 
 import { RabbitMQService } from './rabbitmq.service';
+import { FindNearbyPharmaciesHandler } from '@/pharmacies/adapters/in/whatsapp/find-nearby-pharmacies.handler';
+import { toPharmacy } from '@/pharmacies/adapters/in/messaging/pharmacy-payload.mapper';
+import { PharmacyMessagePayload } from '@/pharmacies/adapters/in/messaging/types/pharmacy-message-payload.type';
 
 @Injectable()
 export class IntegrationConsumer implements OnModuleInit {
-  constructor(private readonly rabbitmq: RabbitMQService) {}
+  constructor(
+    private readonly rabbitmq: RabbitMQService,
+    private readonly pharmacyHandler: FindNearbyPharmaciesHandler,
+  ) {}
 
   async onModuleInit() {
     await this.rabbitmq.inboundChannel.addSetup(
@@ -21,10 +27,19 @@ export class IntegrationConsumer implements OnModuleInit {
             if (!msg) return;
 
             try {
-              const data = JSON.parse(msg.content.toString());
+              const payload = JSON.parse(
+                msg.content.toString(),
+              ) as PharmacyMessagePayload;
+              const { jid, pharmacies } = payload;
 
-              // resposta
-              console.log('Integration - ', data);
+              if (!pharmacies || pharmacies.length === 0) {
+                await this.pharmacyHandler.replyNoResults(jid);
+              } else {
+                await this.pharmacyHandler.replyResults(
+                  jid,
+                  pharmacies.map(toPharmacy),
+                );
+              }
 
               channel.ack(msg);
             } catch (error) {

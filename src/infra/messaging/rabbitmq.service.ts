@@ -101,7 +101,7 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
     await this.outboundChannel.publish(
       process.env.MESSAGE_EXCHANGES_PHARMACY!,
       process.env.MESSAGE_PHARMACY_INCOMING_ROUTING_KEY!,
-      Buffer.from(JSON.stringify(payload)),
+      JSON.stringify(payload),
     );
   }
 

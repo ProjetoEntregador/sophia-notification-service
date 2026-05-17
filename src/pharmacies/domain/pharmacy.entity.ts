@@ -1,11 +1,14 @@
+import { PharmacyMedication } from './pharmacy-medication.entity';
+
 export class Pharmacy {
   constructor(
+    public readonly id: string,
     public readonly name: string,
+    public readonly phone: string,
     public readonly address: string,
+    public readonly city: string,
     public readonly distanceKm: number,
-    public readonly latitude: number,
-    public readonly longitude: number,
-    public readonly phone: string | null,
+    public readonly medications: PharmacyMedication[],
   ) {}
 
   distanceLabel(): string {
