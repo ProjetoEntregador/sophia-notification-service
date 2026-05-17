@@ -4,10 +4,11 @@ import { TesteController } from './teste.controller';
 import { IntegrationConsumer } from './integration.consumer';
 import { InternalConsumer } from './internal.consumer';
 import { BotModule } from '@/bot/bot.module';
+import { PharmaciesModule } from '@/pharmacies/pharmacies.module';
 
 @Global()
 @Module({
-  imports: [BotModule],
+  imports: [BotModule, PharmaciesModule],
   controllers: [TesteController],
   providers: [RabbitMQService, IntegrationConsumer, InternalConsumer],
   exports: [RabbitMQService],

@@ -43,7 +43,7 @@ export class FindNearbyPharmaciesHandler extends MessageHandlerInterface {
     }
 
     this.state.clear(jid);
-    await this.searchAndReply(jid, coords, flowData.radiusKm);
+    await this.search(jid, coords, flowData.radiusKm);
   }
 
   private readActiveFlowData(jid: string): PharmacyFlowData | null {
@@ -60,22 +60,18 @@ export class FindNearbyPharmaciesHandler extends MessageHandlerInterface {
     return { latitude, longitude };
   }
 
-  private async searchAndReply(
+  private async search(
     jid: string,
     coords: Coordinates,
     radiusKm: number | undefined,
   ): Promise<void> {
     try {
-      const pharmacies = await this.findNearby.execute(
+      await this.findNearby.execute(
+        jid,
         coords.latitude,
         coords.longitude,
         radiusKm,
       );
-      if (pharmacies.length === 0) {
-        await this.replyNoResults(jid);
-        return;
-      }
-      await this.replyResults(jid, pharmacies);
     } catch (err) {
       await this.replyError(jid, err as Error);
     }
@@ -89,7 +85,7 @@ export class FindNearbyPharmaciesHandler extends MessageHandlerInterface {
     );
   }
 
-  private async replyNoResults(jid: string): Promise<void> {
+  async replyNoResults(jid: string): Promise<void> {
     await this.sender.typingMessage(jid);
     await this.sender.sendText(
       jid,
@@ -97,10 +93,7 @@ export class FindNearbyPharmaciesHandler extends MessageHandlerInterface {
     );
   }
 
-  private async replyResults(
-    jid: string,
-    pharmacies: Pharmacy[],
-  ): Promise<void> {
+  async replyResults(jid: string, pharmacies: Pharmacy[]): Promise<void> {
     await this.sender.typingMessage(jid);
     await this.sender.sendText(jid, this.formatPharmaciesMessage(pharmacies));
   }

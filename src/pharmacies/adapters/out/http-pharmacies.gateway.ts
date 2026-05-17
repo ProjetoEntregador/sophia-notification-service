@@ -1,46 +1,37 @@
 import { Injectable, Logger } from '@nestjs/common';
-import axios, { isAxiosError } from 'axios';
-import { Pharmacy } from '@/pharmacies/domain/pharmacy.entity';
+import { isAxiosError } from 'axios';
 import { PharmaciesGateway } from '@/pharmacies/domain/pharmacies.gateway.port';
-import { PharmacyResponse } from './types/pharmacy-response.type';
+import { RabbitMQService } from '@/infra/messaging/rabbitmq.service';
 
 @Injectable()
 export class HttpPharmaciesGateway extends PharmaciesGateway {
   private readonly logger = new Logger(HttpPharmaciesGateway.name);
   private readonly baseUrl = process.env.PHARMACY_SERVICE_URL ?? '';
-  private readonly timeoutMs = Number(
-    process.env.PHARMACY_SERVICE_TIMEOUT_MS ?? 10000,
-  );
+
+  constructor(private readonly outgoingService: RabbitMQService) {
+    super();
+  }
 
   async findNearby(
+    jid: string,
     latitude: number,
     longitude: number,
     radiusKm = 3,
-  ): Promise<Pharmacy[]> {
+  ): Promise<void> {
     if (!this.baseUrl) {
       this.logger.warn(
         'PHARMACY_SERVICE_URL não configurada — retornando lista vazia',
       );
-      return [];
+      return;
     }
 
     try {
-      const { data } = await axios.post<PharmacyResponse>(
-        `${this.baseUrl}/nearby`,
-        { latitude, longitude, radiusKm },
-        { timeout: this.timeoutMs },
-      );
-      return (data.pharmacies ?? []).map(
-        (p) =>
-          new Pharmacy(
-            p.name,
-            p.address,
-            p.distanceKm,
-            p.latitude,
-            p.longitude,
-            p.phone ?? null,
-          ),
-      );
+      void this.outgoingService.publishToSpring({
+        jid,
+        latitude,
+        longitude,
+        radiusKm,
+      });
     } catch (err) {
       if (isAxiosError(err)) {
         const status = err.response?.status ?? 'sem resposta';

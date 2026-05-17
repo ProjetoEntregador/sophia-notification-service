@@ -1,16 +1,16 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PharmaciesGateway } from '@/pharmacies/domain/pharmacies.gateway.port';
-import { Pharmacy } from '@/pharmacies/domain/pharmacy.entity';
 
 @Injectable()
 export class FindNearbyPharmaciesUseCase {
   constructor(private readonly gateway: PharmaciesGateway) {}
 
   async execute(
+    jid: string,
     latitude: number,
     longitude: number,
     radiusKm = 3,
-  ): Promise<Pharmacy[]> {
+  ): Promise<void> {
     if (
       !Number.isFinite(latitude) ||
       latitude < -90 ||
@@ -21,6 +21,6 @@ export class FindNearbyPharmaciesUseCase {
     ) {
       throw new BadRequestException('Coordenadas inválidas');
     }
-    return this.gateway.findNearby(latitude, longitude, radiusKm);
+    void this.gateway.findNearby(jid, latitude, longitude, radiusKm);
   }
 }

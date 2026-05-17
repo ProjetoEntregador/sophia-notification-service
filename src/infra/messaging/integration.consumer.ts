@@ -3,10 +3,14 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfirmChannel } from 'amqplib';
 
 import { RabbitMQService } from './rabbitmq.service';
+import { FindNearbyPharmaciesHandler } from '@/pharmacies/adapters/in/whatsapp/find-nearby-pharmacies.handler';
 
 @Injectable()
 export class IntegrationConsumer implements OnModuleInit {
-  constructor(private readonly rabbitmq: RabbitMQService) {}
+  constructor(
+    private readonly rabbitmq: RabbitMQService,
+    private readonly pharmacyHandler: FindNearbyPharmaciesHandler,
+  ) {}
 
   async onModuleInit() {
     await this.rabbitmq.inboundChannel.addSetup(
@@ -21,10 +25,13 @@ export class IntegrationConsumer implements OnModuleInit {
             if (!msg) return;
 
             try {
-              const data = JSON.parse(msg.content.toString());
+              const { jid, pharmacies } = JSON.parse(msg.content.toString());
 
-              // resposta
-              console.log('Integration - ', data);
+              if (pharmacies.length === 0) {
+                await this.pharmacyHandler.replyNoResults(jid);
+              } else {
+                await this.pharmacyHandler.replyResults(jid, pharmacies);
+              }
 
               channel.ack(msg);
             } catch (error) {
