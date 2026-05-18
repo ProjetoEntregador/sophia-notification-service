@@ -6,7 +6,6 @@ import { RabbitMQService } from '@/infra/messaging/rabbitmq.service';
 @Injectable()
 export class HttpPharmaciesGateway extends PharmaciesGateway {
   private readonly logger = new Logger(HttpPharmaciesGateway.name);
-  private readonly baseUrl = process.env.PHARMACY_SERVICE_URL ?? '';
 
   constructor(private readonly outgoingService: RabbitMQService) {
     super();
@@ -18,13 +17,6 @@ export class HttpPharmaciesGateway extends PharmaciesGateway {
     longitude: number,
     radiusKm = 3,
   ): Promise<void> {
-    if (!this.baseUrl) {
-      this.logger.warn(
-        'PHARMACY_SERVICE_URL não configurada — retornando lista vazia',
-      );
-      return;
-    }
-
     try {
       void this.outgoingService.publishToSpring({
         jid,

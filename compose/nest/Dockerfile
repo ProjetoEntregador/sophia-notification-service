@@ -33,17 +33,33 @@ FROM node:20-bullseye-slim AS runner
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+      python3 \
+      make \
+      g++ \
+      pkg-config \
+      git \
+      ca-certificates \
       postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
-
 ENV PATH=/app/node_modules/.bin:$PATH
 
-COPY --from=builder /app/node_modules ./node_modules
+COPY package.json yarn.lock ./
+
+RUN sed -i \
+      -e 's#git+ssh://git@github.com/#https://github.com/#g' \
+      -e 's#ssh://git@github.com/#https://github.com/#g' \
+      -e 's#git@github.com:#https://github.com/#g' \
+      yarn.lock
+
+ENV npm_config_python=python3
+RUN yarn install --production --frozen-lockfile --network-timeout 600000 \
+    && yarn cache clean
+
 COPY --from=builder /app/dist ./dist
 
-COPY package.json yarn.lock tsconfig.json drizzle.config.ts ./
+COPY tsconfig.json drizzle.config.ts ./
 COPY drizzle ./drizzle
 COPY scripts ./scripts
 

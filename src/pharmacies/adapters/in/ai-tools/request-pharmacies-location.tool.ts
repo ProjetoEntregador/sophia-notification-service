@@ -37,9 +37,12 @@ export class RequestPharmaciesLocationTool extends AiToolInterface {
     super();
   }
 
-  async execute(jid: string, args: Record<string, unknown>): Promise<string> {
+  async execute(
+    jid: string,
+    args: Record<string, unknown> | null | undefined,
+  ): Promise<string> {
     const data: PharmacyFlowData = {};
-    const radiusKm = this.normalizeRadius(args.radiusKm);
+    const radiusKm = this.normalizeRadius(args?.radiusKm);
     if (radiusKm !== undefined) data.radiusKm = radiusKm;
 
     this.state.set(jid, {
