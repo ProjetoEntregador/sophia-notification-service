@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { Module } from '@nestjs/common';
+import { SharedModule } from 'src/shared/shared.module';
 import { BotModule } from 'src/bot/bot.module';
 import { DatabaseModule } from 'src/db/database.module';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -16,6 +17,7 @@ import { RabbitMQModule } from '../messaging/rabbitmq.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    SharedModule,
     RabbitMQModule,
     BotModule,
     DatabaseModule,

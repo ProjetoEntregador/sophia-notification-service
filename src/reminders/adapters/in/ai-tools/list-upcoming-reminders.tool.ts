@@ -3,6 +3,7 @@ import { AiToolDefinition } from '@/@types';
 import { AiToolInterface } from '@/bot/ai/interfaces/index';
 import { ListUpcomingRemindersUseCase } from '@/reminders/application/use-cases/list-upcoming-reminders.usecase';
 import { EnsureUserByJidUseCase } from '@/users/application/use-cases/ensure-user-by-jid.usecase';
+import { formatDateTimeInTimezone } from '@/shared/utils/timezone';
 
 type ListUpcomingArgs = { daysAhead: number };
 
@@ -42,10 +43,7 @@ export class ListUpcomingRemindersTool extends AiToolInterface {
         return `Sem doses programadas nos próximos ${input.daysAhead} dias.`;
       }
       const lines = items.map((r, i) => {
-        const when = r.scheduledTime
-          .toISOString()
-          .slice(0, 16)
-          .replace('T', ' ');
+        const when = formatDateTimeInTimezone(r.scheduledTime);
         return `${i + 1}. ${when}`;
       });
       return `Próximas ${items.length} doses:\n${lines.join('\n')}`;

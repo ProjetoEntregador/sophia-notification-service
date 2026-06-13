@@ -3,6 +3,7 @@ import { AiToolDefinition } from '@/@types';
 import { AiToolInterface } from '@/bot/ai/interfaces/index';
 import { ListUserTreatmentsUseCase } from '@/treatments/application/use-cases/list-user-treatments.usecase';
 import { EnsureUserByJidUseCase } from '@/users/application/use-cases/ensure-user-by-jid.usecase';
+import { formatInTimezone } from '@/shared/utils/timezone';
 
 @Injectable()
 export class ListMyTreatmentsTool extends AiToolInterface {
@@ -31,8 +32,16 @@ export class ListMyTreatmentsTool extends AiToolInterface {
 
       const lines = items.map((it, idx) => {
         const meds = it.medicationNames.join(', ');
-        const start = it.treatment.startTime.toISOString().slice(0, 10);
-        const end = it.treatment.endTime.toISOString().slice(0, 10);
+        const start = formatInTimezone(it.treatment.startTime, {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+        });
+        const end = formatInTimezone(it.treatment.endTime, {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+        });
         const { confirmed, skipped, pending } = it.totals;
         return `${idx + 1}. ${meds} — a cada ${it.treatment.intervalHours}h, de ${start} até ${end} (${confirmed} tomadas, ${skipped} puladas, ${pending} pendentes)`;
       });

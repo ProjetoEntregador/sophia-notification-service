@@ -55,7 +55,7 @@ export class UpdateTreatmentTool extends AiToolInterface {
     const input = args as UpdateTreatmentArgs;
 
     if (input.intervalHours === undefined && input.endTime === undefined) {
-      return 'Erro: informe pelo menos um campo para alterar (intervalHours ou endTime).';
+      return 'Nenhum campo a alterar foi recebido. Pergunte ao paciente o que ele quer mudar (intervalo entre doses ou data de término) antes de chamar a ferramenta de novo.';
     }
 
     try {

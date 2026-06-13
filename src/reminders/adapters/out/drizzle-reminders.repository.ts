@@ -10,6 +10,13 @@ import { Reminder } from '@/reminders/domain/reminder.entity';
 import { RemindersRepository } from '@/reminders/domain/reminders.repository.port';
 import { DueReminderProjection } from '@/reminders/domain/due-reminder.projection';
 import { treatmentsToMedications } from '@/treatments/adapters/out/treatment-medication-link.schema';
+import {
+  endOfDayInTimezone,
+  startOfDayInTimezone,
+} from '@/shared/utils/timezone';
+import { TransactionExecutor } from '@/shared/ports/transaction-runner.port';
+
+type DrizzleExecutor = NodePgDatabase;
 
 type ReminderRow = typeof reminders.$inferSelect;
 
@@ -80,13 +87,17 @@ export class DrizzleRemindersRepository extends RemindersRepository {
     return rows.map((r) => this.toEntity(r));
   }
 
-  async findOldestUnresolved(userId?: string): Promise<Reminder | null> {
+  async findOldestUnresolved(
+    userId?: string,
+    now?: Date,
+  ): Promise<Reminder | null> {
     const baseConditions = [
       eq(reminders.sent, true),
       isNull(reminders.confirmed),
     ];
 
     if (userId) {
+      const activeWindow = now ? [lte(treatments.startTime, now)] : [];
       const rows = await this.db
         .select({
           id: reminders.id,
@@ -99,7 +110,14 @@ export class DrizzleRemindersRepository extends RemindersRepository {
         })
         .from(reminders)
         .innerJoin(treatments, eq(treatments.id, reminders.treatmentId))
-        .where(and(...baseConditions, eq(treatments.userId, userId)))
+        .where(
+          and(
+            ...baseConditions,
+            eq(treatments.userId, userId),
+            isNull(treatments.cancelledAt),
+            ...activeWindow,
+          ),
+        )
         .orderBy(asc(reminders.sentAt))
         .limit(1);
       return rows[0] ? this.toEntity(rows[0]) : null;
@@ -117,13 +135,23 @@ export class DrizzleRemindersRepository extends RemindersRepository {
   async findExpired(now: Date, graceMinutes: number): Promise<Reminder[]> {
     const cutoff = new Date(now.getTime() - graceMinutes * 60_000);
     const rows = await this.db
-      .select()
+      .select({
+        id: reminders.id,
+        treatmentId: reminders.treatmentId,
+        scheduledTime: reminders.scheduledTime,
+        sent: reminders.sent,
+        sentAt: reminders.sentAt,
+        confirmed: reminders.confirmed,
+        confirmedAt: reminders.confirmedAt,
+      })
       .from(reminders)
+      .innerJoin(treatments, eq(treatments.id, reminders.treatmentId))
       .where(
         and(
           eq(reminders.sent, true),
           isNull(reminders.confirmed),
           lte(reminders.sentAt, cutoff),
+          isNull(treatments.cancelledAt),
         ),
       );
     return rows.map((r) => this.toEntity(r));
@@ -149,7 +177,13 @@ export class DrizzleRemindersRepository extends RemindersRepository {
         medications,
         eq(medications.id, treatmentsToMedications.medicationId),
       )
-      .where(and(lte(reminders.scheduledTime, now), eq(reminders.sent, false)))
+      .where(
+        and(
+          lte(reminders.scheduledTime, now),
+          eq(reminders.sent, false),
+          isNull(treatments.cancelledAt),
+        ),
+      )
       .orderBy(asc(reminders.scheduledTime));
 
     const grouped = this.groupByReminder(rows);
@@ -169,10 +203,8 @@ export class DrizzleRemindersRepository extends RemindersRepository {
   }
 
   async findByUserIdAndDay(userId: string, day: Date): Promise<Reminder[]> {
-    const start = new Date(day);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(day);
-    end.setHours(23, 59, 59, 999);
+    const start = startOfDayInTimezone(day);
+    const end = endOfDayInTimezone(day);
 
     const rows = await this.db
       .select({
@@ -189,6 +221,7 @@ export class DrizzleRemindersRepository extends RemindersRepository {
       .where(
         and(
           eq(treatments.userId, userId),
+          isNull(treatments.cancelledAt),
           lte(reminders.scheduledTime, end),
           gte(reminders.scheduledTime, start),
         ),
@@ -217,6 +250,7 @@ export class DrizzleRemindersRepository extends RemindersRepository {
       .where(
         and(
           eq(treatments.userId, userId),
+          isNull(treatments.cancelledAt),
           gte(reminders.scheduledTime, from),
           lte(reminders.scheduledTime, until),
         ),
@@ -244,9 +278,10 @@ export class DrizzleRemindersRepository extends RemindersRepository {
     return result.length;
   }
 
-  async save(reminder: Reminder): Promise<Reminder> {
+  async save(reminder: Reminder, tx?: TransactionExecutor): Promise<Reminder> {
+    const executor = (tx as DrizzleExecutor | undefined) ?? this.db;
     const row = this.toRow(reminder);
-    const [saved] = await this.db
+    const [saved] = await executor
       .insert(reminders)
       .values(row)
       .onConflictDoUpdate({ target: reminders.id, set: row })

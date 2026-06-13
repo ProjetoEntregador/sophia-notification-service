@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { Inject, Injectable } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DATABASE } from '@/db/database.module';
@@ -6,6 +6,9 @@ import { treatments } from './treatment.schema';
 import { Treatment } from '@/treatments/domain/treatment.entity';
 import { treatmentsToMedications } from './treatment-medication-link.schema';
 import { TreatmentsRepository } from '@/treatments/domain/treatment.repository.port';
+import { TransactionExecutor } from '@/shared/ports/transaction-runner.port';
+
+type DrizzleExecutor = NodePgDatabase;
 
 type TreatmentRow = typeof treatments.$inferSelect;
 
@@ -16,7 +19,10 @@ export class DrizzleTreatmentsRepository extends TreatmentsRepository {
   }
 
   async findAll(): Promise<Treatment[]> {
-    const rows = await this.db.select().from(treatments);
+    const rows = await this.db
+      .select()
+      .from(treatments)
+      .where(isNull(treatments.cancelledAt));
     return Promise.all(rows.map((r) => this.toEntity(r)));
   }
 
@@ -24,7 +30,7 @@ export class DrizzleTreatmentsRepository extends TreatmentsRepository {
     const [row] = await this.db
       .select()
       .from(treatments)
-      .where(eq(treatments.id, id));
+      .where(and(eq(treatments.id, id), isNull(treatments.cancelledAt)));
     return row ? this.toEntity(row) : null;
   }
 
@@ -32,25 +38,30 @@ export class DrizzleTreatmentsRepository extends TreatmentsRepository {
     const rows = await this.db
       .select()
       .from(treatments)
-      .where(eq(treatments.userId, userId));
+      .where(
+        and(eq(treatments.userId, userId), isNull(treatments.cancelledAt)),
+      );
     return Promise.all(rows.map((r) => this.toEntity(r)));
   }
 
-  async save(treatment: Treatment): Promise<Treatment> {
-    return this.db.transaction(async (tx) => {
+  async save(
+    treatment: Treatment,
+    tx?: TransactionExecutor,
+  ): Promise<Treatment> {
+    const action = async (executor: DrizzleExecutor): Promise<Treatment> => {
       const row = this.toRow(treatment);
 
-      await tx
+      await executor
         .insert(treatments)
         .values(row)
         .onConflictDoUpdate({ target: treatments.id, set: row });
 
-      await tx
+      await executor
         .delete(treatmentsToMedications)
         .where(eq(treatmentsToMedications.treatmentId, treatment.id));
 
       if (treatment.medicationIds.length > 0) {
-        await tx.insert(treatmentsToMedications).values(
+        await executor.insert(treatmentsToMedications).values(
           treatment.medicationIds.map((medicationId) => ({
             treatmentId: treatment.id,
             medicationId,
@@ -59,7 +70,19 @@ export class DrizzleTreatmentsRepository extends TreatmentsRepository {
       }
 
       return treatment;
-    });
+    };
+
+    if (tx) return action(tx as DrizzleExecutor);
+    return this.db.transaction(action);
+  }
+
+  async cancel(id: string, at: Date): Promise<boolean> {
+    const result = await this.db
+      .update(treatments)
+      .set({ cancelledAt: at })
+      .where(and(eq(treatments.id, id), isNull(treatments.cancelledAt)))
+      .returning({ id: treatments.id });
+    return result.length > 0;
   }
 
   async delete(id: string): Promise<boolean> {
@@ -89,6 +112,7 @@ export class DrizzleTreatmentsRepository extends TreatmentsRepository {
       row.startTime,
       row.endTime,
       links.map((l) => l.medicationId),
+      row.cancelledAt,
     );
   }
 
@@ -99,6 +123,7 @@ export class DrizzleTreatmentsRepository extends TreatmentsRepository {
       intervalHours: t.intervalHours,
       startTime: t.startTime,
       endTime: t.endTime,
+      cancelledAt: t.cancelledAt,
     };
   }
 }

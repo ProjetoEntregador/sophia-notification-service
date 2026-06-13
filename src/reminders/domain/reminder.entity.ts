@@ -32,17 +32,15 @@ export class Reminder {
     );
   }
 
-  // Replicate legacy behavior: confirming an already-skipped reminder only updates confirmedAt.
-  // Confirming an already-confirmed reminder is a no-op (returns self).
   confirm(at: Date): Reminder {
-    if (this.confirmed === true) return this;
+    if (this.confirmed !== null) return this;
     return new Reminder(
       this.id,
       this.treatmentId,
       this.scheduledTime,
       this.sent,
       this.sentAt,
-      this.confirmed === false ? false : true,
+      true,
       at,
     );
   }
