@@ -3,6 +3,7 @@ import { AiToolDefinition } from '@/@types';
 import { AiToolInterface } from '@/bot/ai/interfaces/index';
 import { ListTodayRemindersUseCase } from '@/reminders/application/use-cases/list-today-reminders.usecase';
 import { EnsureUserByJidUseCase } from '@/users/application/use-cases/ensure-user-by-jid.usecase';
+import { formatHourInTimezone } from '@/shared/utils/timezone';
 
 @Injectable()
 export class ListTodayRemindersTool extends AiToolInterface {
@@ -28,7 +29,7 @@ export class ListTodayRemindersTool extends AiToolInterface {
         return 'Você não tem doses programadas para hoje.';
 
       const lines = items.map((r, i) => {
-        const hour = r.scheduledTime.toISOString().slice(11, 16);
+        const hour = formatHourInTimezone(r.scheduledTime);
         const status =
           r.confirmed === true
             ? 'confirmada'

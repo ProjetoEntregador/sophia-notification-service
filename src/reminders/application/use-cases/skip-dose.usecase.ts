@@ -24,7 +24,10 @@ export class SkipDoseUseCase {
 
   async byJid(jid: string): Promise<Reminder | null> {
     const user = await this.ensureUser.execute(jid);
-    const pending = await this.reminders.findOldestUnresolved(user.id);
+    const pending = await this.reminders.findOldestUnresolved(
+      user.id,
+      this.clock.now(),
+    );
     if (!pending) return null;
     return this.skip(pending);
   }

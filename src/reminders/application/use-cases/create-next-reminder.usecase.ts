@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { Reminder } from '@/reminders/domain/reminder.entity';
 import { RemindersRepository } from '@/reminders/domain/reminders.repository.port';
@@ -6,6 +6,8 @@ import { TreatmentsRepository } from '@/treatments/domain/treatment.repository.p
 
 @Injectable()
 export class CreateNextReminderUseCase {
+  private readonly logger = new Logger(CreateNextReminderUseCase.name);
+
   constructor(
     private readonly reminders: RemindersRepository,
     private readonly treatments: TreatmentsRepository,
@@ -18,7 +20,10 @@ export class CreateNextReminderUseCase {
       currentReminder.treatmentId,
     );
     if (!treatment) {
-      throw new NotFoundException('Reminder is not related to any treatment.');
+      this.logger.debug(
+        `Reminder ${currentReminder.id} aponta para tratamento ${currentReminder.treatmentId} cancelado ou inexistente — ignorando geração de próximo lembrete.`,
+      );
+      return null;
     }
 
     const nextScheduledTime = treatment.nextDoseAfter(

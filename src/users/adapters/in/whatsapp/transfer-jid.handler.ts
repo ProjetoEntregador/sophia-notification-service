@@ -33,7 +33,12 @@ export class TransferJidHandler extends MessageHandlerInterface {
       await this.sender.typingMessage(jid);
       await this.sender.sendText(
         jid,
-        `Conta vinculada com sucesso, ${user.name}! ✅\nSeus tratamentos e medicamentos agora estão disponíveis neste número.`,
+        [
+          `Conta vinculada com sucesso, ${user.name}! ✅`,
+          'Seus tratamentos e medicamentos agora estão disponíveis neste número.',
+          '',
+          '🔑 O token anterior deixou de valer. Para gerar um novo (caso precise no futuro), envie *meu token*.',
+        ].join('\n'),
       );
     } catch (err) {
       await this.sender.typingMessage(jid);

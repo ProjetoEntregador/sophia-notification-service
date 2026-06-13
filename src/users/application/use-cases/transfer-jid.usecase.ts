@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 import { UsersRepository } from '@/users/domain/users.repository.port';
 import { User } from '@/users/domain/user.entity';
 
@@ -28,6 +29,7 @@ export class TransferJidUseCase {
       );
     }
 
-    return this.users.save(owner.withJid(newJid));
+    const migrated = owner.withJid(newJid).withToken(randomUUID());
+    return this.users.save(migrated);
   }
 }

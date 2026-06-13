@@ -13,4 +13,8 @@ export class User {
   withJid(jid: string): User {
     return new User(this.id, this.name, jid, this.token);
   }
+
+  withToken(token: string): User {
+    return new User(this.id, this.name, this.jid, token);
+  }
 }

@@ -70,6 +70,8 @@ export class AiOrchestratorHandler extends MessageHandlerInterface {
   }
 
   private async runChat(jid: string): Promise<void> {
+    let lastToolSignature: string | null = null;
+
     for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
       const response = await this.ai.chat({
         systemPrompt: buildSystemPrompt(),
@@ -93,6 +95,20 @@ export class AiOrchestratorHandler extends MessageHandlerInterface {
         return;
       }
 
+      const signature = this.signatureOf(response.toolCalls!);
+      if (signature === lastToolSignature) {
+        this.logger.warn(
+          `Detected repeated tool call pattern for ${jid} — aborting loop. signature=${signature}`,
+        );
+        await this.sender.typingMessage(jid);
+        await this.sender.sendText(
+          jid,
+          'Não consegui avançar com sua solicitação. Pode reformular a pergunta?',
+        );
+        return;
+      }
+      lastToolSignature = signature;
+
       for (const call of response.toolCalls!) {
         const result = await this.tools.execute(jid, call.name, call.args);
         this.history.append(jid, {
@@ -109,5 +125,13 @@ export class AiOrchestratorHandler extends MessageHandlerInterface {
       jid,
       'Desculpe, não consegui concluir sua solicitação. Pode tentar de novo?',
     );
+  }
+
+  private signatureOf(
+    toolCalls: { name: string; args: Record<string, unknown> }[],
+  ): string {
+    return toolCalls
+      .map((c) => `${c.name}:${JSON.stringify(c.args ?? {})}`)
+      .join('|');
   }
 }

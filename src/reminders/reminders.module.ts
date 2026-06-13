@@ -3,8 +3,6 @@ import { BotModule } from '../bot/bot.module';
 import { TreatmentsModule } from '../treatments/treatments.module';
 import { MedicationsModule } from '../medications/medications.module';
 import { UsersModule } from '../users/users.module';
-import { Clock } from '../shared/ports/clock.port';
-import { SystemClockAdapter } from '../shared/adapters/system-clock.adapter';
 
 import { RemindersRepository } from './domain/reminders.repository.port';
 import { DrizzleRemindersRepository } from './adapters/out/drizzle-reminders.repository';
@@ -38,7 +36,6 @@ import { SkipDoseHandler } from './adapters/in/whatsapp/skip-dose.handler';
   ],
   providers: [
     { provide: RemindersRepository, useClass: DrizzleRemindersRepository },
-    { provide: Clock, useClass: SystemClockAdapter },
 
     ListRemindersUseCase,
     DeleteReminderUseCase,

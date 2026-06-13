@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DATABASE } from '@/db/database.module';
 import { medications } from './medication.schema';
@@ -55,19 +55,31 @@ export class DrizzleMedicationsRepository extends MedicationsRepository {
         intervalHours: treatments.intervalHours,
         startTime: treatments.startTime,
         endTime: treatments.endTime,
+        cancelledAt: treatments.cancelledAt,
       })
       .from(treatments)
       .innerJoin(
         treatmentsToMedications,
         eq(treatmentsToMedications.treatmentId, treatments.id),
       )
-      .where(eq(treatmentsToMedications.medicationId, medicationId));
+      .where(
+        and(
+          eq(treatmentsToMedications.medicationId, medicationId),
+          isNull(treatments.cancelledAt),
+        ),
+      );
 
     return rows.map(
       (r) =>
-        new Treatment(r.id, r.userId, r.intervalHours, r.startTime, r.endTime, [
-          medicationId,
-        ]),
+        new Treatment(
+          r.id,
+          r.userId,
+          r.intervalHours,
+          r.startTime,
+          r.endTime,
+          [medicationId],
+          r.cancelledAt,
+        ),
     );
   }
 

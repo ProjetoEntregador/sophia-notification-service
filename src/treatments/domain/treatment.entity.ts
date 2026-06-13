@@ -6,9 +6,15 @@ export class Treatment {
     public readonly startTime: Date,
     public readonly endTime: Date,
     public readonly medicationIds: string[],
+    public readonly cancelledAt: Date | null = null,
   ) {}
 
+  isCancelled(): boolean {
+    return this.cancelledAt !== null;
+  }
+
   isActiveAt(date: Date): boolean {
+    if (this.isCancelled()) return false;
     return date >= this.startTime && date <= this.endTime;
   }
 
@@ -24,6 +30,7 @@ export class Treatment {
       this.startTime,
       new Date(this.endTime.getTime() + byMs),
       this.medicationIds,
+      this.cancelledAt,
     );
   }
 
@@ -35,6 +42,19 @@ export class Treatment {
       this.startTime,
       this.endTime,
       ids,
+      this.cancelledAt,
+    );
+  }
+
+  withCancellation(at: Date): Treatment {
+    return new Treatment(
+      this.id,
+      this.userId,
+      this.intervalHours,
+      this.startTime,
+      this.endTime,
+      this.medicationIds,
+      at,
     );
   }
 }

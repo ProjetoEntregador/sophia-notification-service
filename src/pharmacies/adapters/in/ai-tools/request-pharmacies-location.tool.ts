@@ -8,6 +8,7 @@ export const PHARMACY_LOCATION_FLOW = 'pharmacy_location';
 
 const MIN_RADIUS_KM = 0.1;
 const MAX_RADIUS_KM = 20;
+const FLOW_TTL_MS = 10 * 60 * 1000;
 
 @Injectable()
 export class RequestPharmaciesLocationTool extends AiToolInterface {
@@ -45,11 +46,15 @@ export class RequestPharmaciesLocationTool extends AiToolInterface {
     const radiusKm = this.normalizeRadius(args?.radiusKm);
     if (radiusKm !== undefined) data.radiusKm = radiusKm;
 
-    this.state.set(jid, {
-      flow: PHARMACY_LOCATION_FLOW,
-      step: 0,
-      data,
-    });
+    this.state.set(
+      jid,
+      {
+        flow: PHARMACY_LOCATION_FLOW,
+        step: 0,
+        data,
+      },
+      FLOW_TTL_MS,
+    );
 
     return [
       'Pedido de localização ativado para o paciente.',

@@ -24,7 +24,16 @@ export class ShowTokenHandler extends MessageHandlerInterface {
       await this.sender.typingMessage(jid);
       await this.sender.sendText(
         jid,
-        `🔑 Seu token de portabilidade:\n\n*${token}*\n\nSalve em local seguro. Se trocar de número, envie *vincular ${token}* no novo número para manter seus tratamentos.`,
+        [
+          '🔑 *Seu token de portabilidade:*',
+          '',
+          `\`${token}\``,
+          '',
+          '⚠️ *Trate como senha.* Quem tiver acesso a este token pode vincular sua conta a outro número.',
+          '• Copie agora e salve em um lugar seguro (gerenciador de senhas).',
+          '• Apague esta mensagem do WhatsApp depois de salvar.',
+          '• Quando usar `vincular <token>` em outro número, o token é trocado automaticamente — o atual deixa de valer.',
+        ].join('\n'),
       );
     } catch (err) {
       await this.sender.typingMessage(jid);
