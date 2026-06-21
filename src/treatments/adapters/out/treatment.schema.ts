@@ -10,4 +10,5 @@ export const treatments = pgTable('treatments', {
   startTime: timestamp('start_time', { withTimezone: true }).notNull(),
   endTime: timestamp('end_time', { withTimezone: true }).notNull(),
   cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
+  pausedAt: timestamp('paused_at', { withTimezone: true }),
 });

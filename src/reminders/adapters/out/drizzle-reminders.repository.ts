@@ -26,6 +26,8 @@ type DueRow = {
   scheduledTime: Date;
   jid: string;
   medicationName: string;
+  quietHoursStart: string | null;
+  quietHoursEnd: string | null;
 };
 
 type GroupedDue = {
@@ -33,6 +35,8 @@ type GroupedDue = {
   scheduledTime: Date;
   jid: string;
   medicationNames: string[];
+  quietHoursStart: string | null;
+  quietHoursEnd: string | null;
 };
 
 @Injectable()
@@ -165,6 +169,8 @@ export class DrizzleRemindersRepository extends RemindersRepository {
         scheduledTime: reminders.scheduledTime,
         jid: users.jid,
         medicationName: medications.name,
+        quietHoursStart: users.quietHoursStart,
+        quietHoursEnd: users.quietHoursEnd,
       })
       .from(reminders)
       .innerJoin(treatments, eq(treatments.id, reminders.treatmentId))
@@ -182,6 +188,7 @@ export class DrizzleRemindersRepository extends RemindersRepository {
           lte(reminders.scheduledTime, now),
           eq(reminders.sent, false),
           isNull(treatments.cancelledAt),
+          isNull(treatments.pausedAt),
         ),
       )
       .orderBy(asc(reminders.scheduledTime));
@@ -198,6 +205,8 @@ export class DrizzleRemindersRepository extends RemindersRepository {
           data.treatmentId,
           data.scheduledTime,
         ),
+        quietHoursStart: data.quietHoursStart,
+        quietHoursEnd: data.quietHoursEnd,
       })),
     );
   }
@@ -328,6 +337,8 @@ export class DrizzleRemindersRepository extends RemindersRepository {
           scheduledTime: r.scheduledTime,
           jid: r.jid,
           medicationNames: [r.medicationName],
+          quietHoursStart: r.quietHoursStart,
+          quietHoursEnd: r.quietHoursEnd,
         });
       }
     }

@@ -9,8 +9,11 @@ import { DeleteMedicationUseCase } from './application/use-cases/delete-medicati
 import { FindMedicationByNameUseCase } from './application/use-cases/find-medication-by-name.usecase';
 import { GetMedicationStatusUseCase } from './application/use-cases/get-medication-status.usecase';
 import { UpdateMedicationQuantityUseCase } from './application/use-cases/update-medication-quantity.usecase';
+import { ListLowStockMedicationsUseCase } from './application/use-cases/list-low-stock.usecase';
 import { RegisterMedicationTool } from './adapters/in/ai-tools/register-medication.tool';
 import { UpdateMedicationQuantityTool } from './adapters/in/ai-tools/update-medication-quantity.tool';
+import { DeleteMedicationTool } from './adapters/in/ai-tools/delete-medication.tool';
+import { ListLowStockMedicationsTool } from './adapters/in/ai-tools/list-low-stock-medications.tool';
 
 @Module({
   imports: [UsersModule],
@@ -23,8 +26,11 @@ import { UpdateMedicationQuantityTool } from './adapters/in/ai-tools/update-medi
     FindMedicationByNameUseCase,
     GetMedicationStatusUseCase,
     UpdateMedicationQuantityUseCase,
+    ListLowStockMedicationsUseCase,
     RegisterMedicationTool,
     UpdateMedicationQuantityTool,
+    DeleteMedicationTool,
+    ListLowStockMedicationsTool,
   ],
   exports: [
     MedicationsRepository,
@@ -32,8 +38,11 @@ import { UpdateMedicationQuantityTool } from './adapters/in/ai-tools/update-medi
     FindMedicationByNameUseCase,
     GetMedicationStatusUseCase,
     ListMedicationsUseCase,
+    ListLowStockMedicationsUseCase,
     RegisterMedicationTool,
     UpdateMedicationQuantityTool,
+    DeleteMedicationTool,
+    ListLowStockMedicationsTool,
   ],
 })
 export class MedicationsModule {}

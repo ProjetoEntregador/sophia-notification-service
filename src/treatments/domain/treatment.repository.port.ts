@@ -10,5 +10,7 @@ export abstract class TreatmentsRepository {
     tx?: TransactionExecutor,
   ): Promise<Treatment>;
   abstract cancel(id: string, at: Date): Promise<boolean>;
+  abstract pause(id: string, at: Date): Promise<boolean>;
+  abstract resume(id: string): Promise<boolean>;
   abstract delete(id: string): Promise<boolean>;
 }

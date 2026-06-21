@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Clock } from '@/shared/ports/clock.port';
 import { MessageSender } from '@/shared/ports/message-sender.port';
 import { RemindersRepository } from '@/reminders/domain/reminders.repository.port';
+import { isWithinQuietHours } from '@/shared/utils/quiet-hours';
 
 @Injectable()
 export class DispatchDueRemindersUseCase {
@@ -14,12 +15,26 @@ export class DispatchDueRemindersUseCase {
   ) {}
 
   async execute(): Promise<void> {
-    const due = await this.reminders.findDue(this.clock.now());
+    const now = this.clock.now();
+    const due = await this.reminders.findDue(now);
     if (due.length === 0) return;
 
-    this.logger.log(`Disparando ${due.length} reminder(s)`);
+    const deliverable = due.filter(
+      (d) => !isWithinQuietHours(now, d.quietHoursStart, d.quietHoursEnd),
+    );
 
-    for (const item of due) {
+    const silenced = due.length - deliverable.length;
+
+    if (silenced > 0) {
+      this.logger.debug(
+        `${silenced} reminder(s) adiados por estarem dentro da janela de silêncio do paciente.`,
+      );
+    }
+    if (deliverable.length === 0) return;
+
+    this.logger.log(`Disparando ${deliverable.length} reminder(s)`);
+
+    for (const item of deliverable) {
       try {
         const meds = item.medicationNames.join(', ');
         const prefix = item.previousSkipped
