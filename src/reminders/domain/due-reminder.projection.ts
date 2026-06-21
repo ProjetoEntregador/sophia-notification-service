@@ -5,4 +5,6 @@ export type DueReminderProjection = {
   jid: string;
   medicationNames: string[];
   previousSkipped: boolean;
+  quietHoursStart: string | null;
+  quietHoursEnd: string | null;
 };

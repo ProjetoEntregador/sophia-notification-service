@@ -7,14 +7,19 @@ export class Treatment {
     public readonly endTime: Date,
     public readonly medicationIds: string[],
     public readonly cancelledAt: Date | null = null,
+    public readonly pausedAt: Date | null = null,
   ) {}
 
   isCancelled(): boolean {
     return this.cancelledAt !== null;
   }
 
+  isPaused(): boolean {
+    return this.pausedAt !== null;
+  }
+
   isActiveAt(date: Date): boolean {
-    if (this.isCancelled()) return false;
+    if (this.isCancelled() || this.isPaused()) return false;
     return date >= this.startTime && date <= this.endTime;
   }
 
@@ -31,6 +36,7 @@ export class Treatment {
       new Date(this.endTime.getTime() + byMs),
       this.medicationIds,
       this.cancelledAt,
+      this.pausedAt,
     );
   }
 
@@ -43,6 +49,7 @@ export class Treatment {
       this.endTime,
       ids,
       this.cancelledAt,
+      this.pausedAt,
     );
   }
 
@@ -55,6 +62,33 @@ export class Treatment {
       this.endTime,
       this.medicationIds,
       at,
+      this.pausedAt,
+    );
+  }
+
+  withPause(at: Date): Treatment {
+    return new Treatment(
+      this.id,
+      this.userId,
+      this.intervalHours,
+      this.startTime,
+      this.endTime,
+      this.medicationIds,
+      this.cancelledAt,
+      at,
+    );
+  }
+
+  withResume(): Treatment {
+    return new Treatment(
+      this.id,
+      this.userId,
+      this.intervalHours,
+      this.startTime,
+      this.endTime,
+      this.medicationIds,
+      this.cancelledAt,
+      null,
     );
   }
 }

@@ -9,8 +9,10 @@ import { UpdateUserUseCase } from './application/use-cases/update-user.usecase';
 import { EnsureUserByJidUseCase } from './application/use-cases/ensure-user-by-jid.usecase';
 import { TransferJidUseCase } from './application/use-cases/transfer-jid.usecase';
 import { ShowMyTokenUseCase } from './application/use-cases/show-my-token.usecase';
+import { SetQuietHoursUseCase } from './application/use-cases/set-quiet-hours.usecase';
 import { TransferJidHandler } from './adapters/in/whatsapp/transfer-jid.handler';
 import { ShowTokenHandler } from './adapters/in/whatsapp/show-token.handler';
+import { SetQuietHoursTool } from './adapters/in/ai-tools/set-quiet-hours.tool';
 
 @Module({
   imports: [forwardRef(() => BotModule)],
@@ -23,8 +25,10 @@ import { ShowTokenHandler } from './adapters/in/whatsapp/show-token.handler';
     EnsureUserByJidUseCase,
     TransferJidUseCase,
     ShowMyTokenUseCase,
+    SetQuietHoursUseCase,
     TransferJidHandler,
     ShowTokenHandler,
+    SetQuietHoursTool,
   ],
   exports: [
     GetUserOverviewUseCase,
@@ -34,8 +38,10 @@ import { ShowTokenHandler } from './adapters/in/whatsapp/show-token.handler';
     EnsureUserByJidUseCase,
     TransferJidUseCase,
     ShowMyTokenUseCase,
+    SetQuietHoursUseCase,
     TransferJidHandler,
     ShowTokenHandler,
+    SetQuietHoursTool,
   ],
 })
 export class UsersModule {}

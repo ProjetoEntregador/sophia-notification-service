@@ -15,10 +15,14 @@ import { GetTreatmentSummaryUseCase } from './application/use-cases/get-treatmen
 import { UpdateTreatmentIntervalUseCase } from './application/use-cases/update-treatment-interval.usecase';
 import { UpdateTreatmentEndDateUseCase } from './application/use-cases/update-treatment-end-date.usecase';
 import { CancelTreatmentUseCase } from './application/use-cases/cancel-treatment.usecase';
+import { PauseTreatmentUseCase } from './application/use-cases/pause-treatment.usecase';
+import { ResumeTreatmentUseCase } from './application/use-cases/resume-treatment.usecase';
 import { RegisterTreatmentTool } from './adapters/in/ai-tools/register-treatment.tool';
 import { ListMyTreatmentsTool } from './adapters/in/ai-tools/list-my-treatments.tool';
 import { UpdateTreatmentTool } from './adapters/in/ai-tools/update-treatment.tool';
 import { CancelTreatmentTool } from './adapters/in/ai-tools/cancel-treatment.tool';
+import { PauseTreatmentTool } from './adapters/in/ai-tools/pause-treatment.tool';
+import { ResumeTreatmentTool } from './adapters/in/ai-tools/resume-treatment.tool';
 import { StartTreatmentHandler } from './adapters/in/whatsapp/start-treatment.handler';
 
 @Module({
@@ -40,10 +44,14 @@ import { StartTreatmentHandler } from './adapters/in/whatsapp/start-treatment.ha
     UpdateTreatmentIntervalUseCase,
     UpdateTreatmentEndDateUseCase,
     CancelTreatmentUseCase,
+    PauseTreatmentUseCase,
+    ResumeTreatmentUseCase,
     RegisterTreatmentTool,
     ListMyTreatmentsTool,
     UpdateTreatmentTool,
     CancelTreatmentTool,
+    PauseTreatmentTool,
+    ResumeTreatmentTool,
     StartTreatmentHandler,
   ],
   exports: [
@@ -54,6 +62,8 @@ import { StartTreatmentHandler } from './adapters/in/whatsapp/start-treatment.ha
     ListMyTreatmentsTool,
     UpdateTreatmentTool,
     CancelTreatmentTool,
+    PauseTreatmentTool,
+    ResumeTreatmentTool,
     StartTreatmentHandler,
   ],
 })

@@ -85,7 +85,14 @@ export class DrizzleUsersRepository extends UsersRepository {
   }
 
   private toEntity(row: UserRow): User {
-    return new User(row.id, row.name, row.jid, row.token);
+    return new User(
+      row.id,
+      row.name,
+      row.jid,
+      row.token,
+      row.quietHoursStart,
+      row.quietHoursEnd,
+    );
   }
 
   private toRow(u: User) {
@@ -94,6 +101,8 @@ export class DrizzleUsersRepository extends UsersRepository {
       name: u.name,
       jid: u.jid,
       token: u.token,
+      quietHoursStart: u.quietHoursStart,
+      quietHoursEnd: u.quietHoursEnd,
     };
   }
 }

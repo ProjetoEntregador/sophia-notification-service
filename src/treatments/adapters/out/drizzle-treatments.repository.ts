@@ -85,6 +85,30 @@ export class DrizzleTreatmentsRepository extends TreatmentsRepository {
     return result.length > 0;
   }
 
+  async pause(id: string, at: Date): Promise<boolean> {
+    const result = await this.db
+      .update(treatments)
+      .set({ pausedAt: at })
+      .where(
+        and(
+          eq(treatments.id, id),
+          isNull(treatments.cancelledAt),
+          isNull(treatments.pausedAt),
+        ),
+      )
+      .returning({ id: treatments.id });
+    return result.length > 0;
+  }
+
+  async resume(id: string): Promise<boolean> {
+    const result = await this.db
+      .update(treatments)
+      .set({ pausedAt: null })
+      .where(and(eq(treatments.id, id), isNull(treatments.cancelledAt)))
+      .returning({ id: treatments.id });
+    return result.length > 0;
+  }
+
   async delete(id: string): Promise<boolean> {
     return this.db.transaction(async (tx) => {
       await tx
@@ -113,6 +137,7 @@ export class DrizzleTreatmentsRepository extends TreatmentsRepository {
       row.endTime,
       links.map((l) => l.medicationId),
       row.cancelledAt,
+      row.pausedAt,
     );
   }
 
@@ -124,6 +149,7 @@ export class DrizzleTreatmentsRepository extends TreatmentsRepository {
       startTime: t.startTime,
       endTime: t.endTime,
       cancelledAt: t.cancelledAt,
+      pausedAt: t.pausedAt,
     };
   }
 }

@@ -17,6 +17,7 @@ import { DispatchDueRemindersUseCase } from './application/use-cases/dispatch-du
 import { AutoSkipExpiredRemindersUseCase } from './application/use-cases/auto-skip-expired-reminders.usecase';
 import { ListTodayRemindersUseCase } from './application/use-cases/list-today-reminders.usecase';
 import { ListUpcomingRemindersUseCase } from './application/use-cases/list-upcoming-reminders.usecase';
+import { GetAdherenceReportUseCase } from './application/use-cases/get-adherence-report.usecase';
 
 import { RemindersDispatchCron } from './adapters/in/reminders-dispatch.cron';
 import { RemindersAutoSkipCron } from './adapters/in/reminders-auto-skip.cron';
@@ -24,6 +25,7 @@ import { ConfirmDoseTool } from './adapters/in/ai-tools/confirm-dose.tool';
 import { SkipDoseTool } from './adapters/in/ai-tools/skip-dose.tool';
 import { ListTodayRemindersTool } from './adapters/in/ai-tools/list-today-reminders.tool';
 import { ListUpcomingRemindersTool } from './adapters/in/ai-tools/list-upcoming-reminders.tool';
+import { GetAdherenceReportTool } from './adapters/in/ai-tools/get-adherence-report.tool';
 import { ConfirmDoseHandler } from './adapters/in/whatsapp/confirm-dose.handler';
 import { SkipDoseHandler } from './adapters/in/whatsapp/skip-dose.handler';
 
@@ -47,6 +49,7 @@ import { SkipDoseHandler } from './adapters/in/whatsapp/skip-dose.handler';
     AutoSkipExpiredRemindersUseCase,
     ListTodayRemindersUseCase,
     ListUpcomingRemindersUseCase,
+    GetAdherenceReportUseCase,
 
     RemindersDispatchCron,
     RemindersAutoSkipCron,
@@ -55,6 +58,7 @@ import { SkipDoseHandler } from './adapters/in/whatsapp/skip-dose.handler';
     SkipDoseTool,
     ListTodayRemindersTool,
     ListUpcomingRemindersTool,
+    GetAdherenceReportTool,
 
     ConfirmDoseHandler,
     SkipDoseHandler,
@@ -68,6 +72,7 @@ import { SkipDoseHandler } from './adapters/in/whatsapp/skip-dose.handler';
     SkipDoseTool,
     ListTodayRemindersTool,
     ListUpcomingRemindersTool,
+    GetAdherenceReportTool,
     ConfirmDoseHandler,
     SkipDoseHandler,
   ],
