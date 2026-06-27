@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { MessageHandlerInterface } from '../interfaces/index';
 import { MessageSender } from '@/shared/ports/message-sender.port';
 import { AiServiceInterface } from './interfaces/index';
-import { ChatHistoryService } from './chat-history.service';
+import { ChatHistoryRepository } from './domain/chat-history.repository.port';
 import { AiToolsRegistry } from './ai-tools.registry';
 import {
   AI_FALLBACK_MESSAGE,
@@ -18,7 +18,7 @@ export class AiOrchestratorHandler extends MessageHandlerInterface {
 
   constructor(
     private readonly ai: AiServiceInterface,
-    private readonly history: ChatHistoryService,
+    private readonly history: ChatHistoryRepository,
     private readonly tools: AiToolsRegistry,
     private readonly sender: MessageSender,
   ) {
@@ -30,8 +30,8 @@ export class AiOrchestratorHandler extends MessageHandlerInterface {
   }
 
   async handle(jid: string, text: string): Promise<void> {
-    const historyLengthBefore = this.history.length(jid);
-    this.history.append(jid, { role: 'user', content: text });
+    const historyLengthBefore = await this.history.length(jid);
+    await this.history.append(jid, { role: 'user', content: text });
 
     try {
       await this.runChat(jid);
@@ -43,8 +43,8 @@ export class AiOrchestratorHandler extends MessageHandlerInterface {
         this.logger.warn(
           `tool_use_failed para ${jid} — limpando histórico e tentando novamente`,
         );
-        this.history.clear(jid);
-        this.history.append(jid, { role: 'user', content: text });
+        await this.history.clear(jid);
+        await this.history.append(jid, { role: 'user', content: text });
 
         try {
           await this.runChat(jid);
@@ -54,14 +54,14 @@ export class AiOrchestratorHandler extends MessageHandlerInterface {
             `Retry após reset também falhou para ${jid}: ${(retryErr as Error).message}`,
             (retryErr as Error).stack,
           );
-          this.history.clear(jid);
+          await this.history.clear(jid);
         }
       } else {
         this.logger.error(
           `Falha ao chamar IA para ${jid}: ${errorMessage}`,
           (err as Error).stack,
         );
-        this.history.truncate(jid, historyLengthBefore);
+        await this.history.truncate(jid, historyLengthBefore);
       }
 
       await this.sender.typingMessage(jid);
@@ -75,13 +75,13 @@ export class AiOrchestratorHandler extends MessageHandlerInterface {
     for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
       const response = await this.ai.chat({
         systemPrompt: buildSystemPrompt(),
-        messages: this.history.get(jid),
+        messages: await this.history.get(jid),
         tools: this.tools.definitions(),
       });
 
       const hasTools = !!response.toolCalls?.length;
 
-      this.history.append(jid, {
+      await this.history.append(jid, {
         role: 'assistant',
         content: response.text,
         toolCalls: response.toolCalls,
@@ -111,7 +111,7 @@ export class AiOrchestratorHandler extends MessageHandlerInterface {
 
       for (const call of response.toolCalls!) {
         const result = await this.tools.execute(jid, call.name, call.args);
-        this.history.append(jid, {
+        await this.history.append(jid, {
           role: 'tool',
           toolUseId: call.toolUseId,
           content: result,

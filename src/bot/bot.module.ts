@@ -20,7 +20,8 @@ import { MessageRouter } from './messaging/message-router.service';
 import { StaticMessageHandlerRegistry } from './messaging/static-message-handler-registry';
 import { ConversationStateService } from './messaging/state/conversation-state.service';
 import { AiOrchestratorHandler } from './ai/ai-orchestrator.handler';
-import { ChatHistoryService } from './ai/chat-history.service';
+import { ChatHistoryRepository } from './ai/domain/chat-history.repository.port';
+import { DrizzleChatHistoryRepository } from './ai/adapters/out/drizzle-chat-history.repository';
 import { AiToolsRegistry } from './ai/ai-tools.registry';
 import { LocalAiService } from './ai/local-ai.service';
 import { LocalTranscriptionService } from './ai/local-transcription.service';
@@ -48,7 +49,10 @@ import { RabbitMQService } from '@/infra/messaging/rabbitmq.service';
     ConversationStateService,
     RabbitMQService,
 
-    ChatHistoryService,
+    {
+      provide: ChatHistoryRepository,
+      useClass: DrizzleChatHistoryRepository,
+    },
     AiToolsRegistry,
     AiOrchestratorHandler,
     LocalAiService,

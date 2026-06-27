@@ -57,6 +57,13 @@
       "when": 1782043027395,
       "tag": "0007_treatments_paused_at_users_quiet_hours",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1782576578745,
+      "tag": "0008_curious_nekra",
+      "breakpoints": true
     }
   ]
 }
