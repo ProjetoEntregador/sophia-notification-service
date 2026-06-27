@@ -23,7 +23,11 @@ import { AiOrchestratorHandler } from './ai/ai-orchestrator.handler';
 import { ChatHistoryService } from './ai/chat-history.service';
 import { AiToolsRegistry } from './ai/ai-tools.registry';
 import { LocalAiService } from './ai/local-ai.service';
-import { AiServiceInterface } from './ai/interfaces/index';
+import { LocalTranscriptionService } from './ai/local-transcription.service';
+import {
+  AiServiceInterface,
+  TranscriptionServiceInterface,
+} from './ai/interfaces/index';
 import { MessageSender } from '@/shared/ports/message-sender.port';
 import { RabbitMQService } from '@/infra/messaging/rabbitmq.service';
 
@@ -49,6 +53,11 @@ import { RabbitMQService } from '@/infra/messaging/rabbitmq.service';
     AiOrchestratorHandler,
     LocalAiService,
     { provide: AiServiceInterface, useExisting: LocalAiService },
+    LocalTranscriptionService,
+    {
+      provide: TranscriptionServiceInterface,
+      useExisting: LocalTranscriptionService,
+    },
 
     StaticMessageHandlerRegistry,
     {

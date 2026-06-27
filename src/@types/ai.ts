@@ -25,3 +25,13 @@ export type AiChatResponse = {
   text?: string;
   toolCalls?: AiToolCall[];
 };
+
+export type AiTranscriptionRequest = {
+  audio: Buffer;
+  mimeType: string;
+  fileName?: string;
+};
+
+export type AiTranscriptionResponse = {
+  text?: string;
+};

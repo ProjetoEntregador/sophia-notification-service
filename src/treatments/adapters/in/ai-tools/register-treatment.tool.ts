@@ -4,14 +4,11 @@ import { AiToolInterface } from '@/bot/ai/interfaces/index';
 import { RegisterTreatmentUseCase } from '@/treatments/application/use-cases/register-treatment.usecase';
 import { FindMedicationByNameUseCase } from '@/medications/application/use-cases/find-medication-by-name.usecase';
 import { EnsureUserByJidUseCase } from '@/users/application/use-cases/ensure-user-by-jid.usecase';
-
-type RegisterTreatmentArgs = {
-  medications: string[];
-  intervalHours: number;
-  startTime: string;
-  endTime?: string;
-  durationDays?: number;
-};
+import {
+  RegisterTreatmentArgs,
+  RegisterTreatmentValidation,
+} from './types/register-treatment-args.type';
+import { MISSING_DATA_MESSAGE } from './constants/register-treatment.constants';
 
 @Injectable()
 export class RegisterTreatmentTool extends AiToolInterface {
@@ -64,39 +61,18 @@ export class RegisterTreatmentTool extends AiToolInterface {
   }
 
   async execute(jid: string, args: Record<string, unknown>): Promise<string> {
-    const input = args as RegisterTreatmentArgs;
-
-    const start = new Date(input.startTime);
-    if (Number.isNaN(start.getTime())) {
-      return 'Erro: startTime não está em formato ISO 8601 válido.';
+    const validation = this.validate(args);
+    if ('error' in validation) {
+      return validation.error;
     }
 
-    let end: Date;
-    if (input.endTime) {
-      end = new Date(input.endTime);
-      if (Number.isNaN(end.getTime())) {
-        return 'Erro: endTime não está em formato ISO 8601 válido.';
-      }
-    } else if (
-      typeof input.durationDays === 'number' &&
-      input.durationDays > 0
-    ) {
-      end = new Date(
-        start.getTime() + input.durationDays * 24 * 60 * 60 * 1000,
-      );
-    } else {
-      return 'Erro: forneça endTime (ISO 8601) ou durationDays (inteiro positivo).';
-    }
-
-    if (end <= start) {
-      return 'Erro: o término precisa ser posterior ao início.';
-    }
+    const { medications, intervalHours, start, end } = validation;
 
     try {
       const user = await this.ensureUser.execute(jid);
       const medicationsId: string[] = [];
 
-      for (const medicationName of input.medications) {
+      for (const medicationName of medications) {
         const matches = await this.findMedication.execute(
           medicationName,
           user.id,
@@ -116,14 +92,71 @@ export class RegisterTreatmentTool extends AiToolInterface {
 
       const treatment = await this.registerTreatment.execute({
         userId: user.id,
-        intervalHours: input.intervalHours,
+        intervalHours,
         startTime: start.toISOString(),
         endTime: end.toISOString(),
         medicationsIds: medicationsId,
       });
-      return `Tratamento cadastrado com id ${treatment.id}: a cada ${input.intervalHours}h, de ${start.toISOString()} até ${end.toISOString()}.`;
+      return `Tratamento cadastrado com id ${treatment.id}: a cada ${intervalHours}h, de ${start.toISOString()} até ${end.toISOString()}.`;
     } catch (err) {
       return `Erro ao cadastrar tratamento: ${(err as Error).message}`;
     }
+  }
+
+  private validate(args: Record<string, unknown>): RegisterTreatmentValidation {
+    const input = (args ?? {}) as RegisterTreatmentArgs;
+
+    const medications = Array.isArray(input.medications)
+      ? input.medications.filter(
+          (m): m is string => typeof m === 'string' && m.trim().length > 0,
+        )
+      : [];
+    const intervalHours =
+      typeof input.intervalHours === 'number'
+        ? input.intervalHours
+        : Number.NaN;
+    const startTime =
+      typeof input.startTime === 'string' ? input.startTime : '';
+
+    if (
+      medications.length === 0 ||
+      !Number.isInteger(intervalHours) ||
+      intervalHours < 1 ||
+      intervalHours > 24 ||
+      !startTime.trim()
+    ) {
+      return { error: MISSING_DATA_MESSAGE };
+    }
+
+    const start = new Date(startTime);
+    if (Number.isNaN(start.getTime())) {
+      return { error: 'Erro: startTime não está em formato ISO 8601 válido.' };
+    }
+
+    let end: Date;
+    if (typeof input.endTime === 'string' && input.endTime) {
+      end = new Date(input.endTime);
+      if (Number.isNaN(end.getTime())) {
+        return { error: 'Erro: endTime não está em formato ISO 8601 válido.' };
+      }
+    } else if (
+      typeof input.durationDays === 'number' &&
+      input.durationDays > 0
+    ) {
+      end = new Date(
+        start.getTime() + input.durationDays * 24 * 60 * 60 * 1000,
+      );
+    } else {
+      return {
+        error:
+          'Erro: forneça endTime (ISO 8601) ou durationDays (inteiro positivo).',
+      };
+    }
+
+    if (end <= start) {
+      return { error: 'Erro: o término precisa ser posterior ao início.' };
+    }
+
+    return { medications, intervalHours, start, end };
   }
 }

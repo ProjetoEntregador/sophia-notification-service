@@ -3,11 +3,11 @@ import { AiToolDefinition } from '@/@types';
 import { AiToolInterface } from '@/bot/ai/interfaces/index';
 import { RegisterMedicationUseCase } from '@/medications/application/use-cases/register-medication.usecase';
 import { EnsureUserByJidUseCase } from '@/users/application/use-cases/ensure-user-by-jid.usecase';
-
-type RegisterMedicationArgs = {
-  name: string;
-  quantity: number;
-};
+import {
+  RegisterMedicationArgs,
+  RegisterMedicationValidation,
+} from './types/register-medication-args.type';
+import { MISSING_DATA_MESSAGE } from './constants/register-medication.constants';
 
 @Injectable()
 export class RegisterMedicationTool extends AiToolInterface {
@@ -39,18 +39,39 @@ export class RegisterMedicationTool extends AiToolInterface {
   }
 
   async execute(jid: string, args: Record<string, unknown>): Promise<string> {
-    const input = args as RegisterMedicationArgs;
+    const validation = this.validate(args);
+    if ('error' in validation) {
+      return validation.error;
+    }
+
+    const { name, quantity } = validation;
 
     try {
       const user = await this.ensureUser.execute(jid);
       const medication = await this.registerMedication.execute({
         userId: user.id,
-        name: input.name,
-        quantity: input.quantity,
+        name,
+        quantity,
       });
-      return `Medicamento cadastrado com id ${medication.id}: o medicamento ${input.name} possui ${input.quantity} unidades.`;
+      return `Medicamento cadastrado com id ${medication.id}: o medicamento ${name} possui ${quantity} unidades.`;
     } catch (err) {
       return `Erro ao cadastrar medicamento: ${(err as Error).message}`;
     }
+  }
+
+  private validate(
+    args: Record<string, unknown>,
+  ): RegisterMedicationValidation {
+    const input = (args ?? {}) as RegisterMedicationArgs;
+
+    const name = typeof input.name === 'string' ? input.name.trim() : '';
+    const quantity =
+      typeof input.quantity === 'number' ? input.quantity : Number.NaN;
+
+    if (!name || !Number.isInteger(quantity) || quantity < 1) {
+      return { error: MISSING_DATA_MESSAGE };
+    }
+
+    return { name, quantity };
   }
 }
