@@ -1,11 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { isAxiosError } from 'axios';
 import { PharmaciesGateway } from '@/pharmacies/domain/pharmacies.gateway.port';
 import { RabbitMQService } from '@/infra/messaging/rabbitmq.service';
 
 @Injectable()
-export class HttpPharmaciesGateway extends PharmaciesGateway {
-  private readonly logger = new Logger(HttpPharmaciesGateway.name);
+export class RabbitMqPharmaciesGateway extends PharmaciesGateway {
+  private readonly logger = new Logger(RabbitMqPharmaciesGateway.name);
 
   constructor(private readonly outgoingService: RabbitMQService) {
     super();
@@ -18,21 +17,16 @@ export class HttpPharmaciesGateway extends PharmaciesGateway {
     radiusKm = 3,
   ): Promise<void> {
     try {
-      void this.outgoingService.publishToSpring({
+      await this.outgoingService.publishToSpring({
         jid,
         latitude,
         longitude,
         radiusKm,
       });
     } catch (err) {
-      if (isAxiosError(err)) {
-        const status = err.response?.status ?? 'sem resposta';
-        this.logger.error(
-          `Falha ao consultar serviço de farmácias (${status}): ${err.message}`,
-        );
-        throw new Error('serviço de farmácias indisponível');
-      }
-      throw err;
+      this.logger.error(
+        `Falha ao publicar pedido de farmácias para ${jid}: ${(err as Error).message}`,
+      );
     }
   }
 }

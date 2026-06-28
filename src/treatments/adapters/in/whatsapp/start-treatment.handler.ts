@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConversationState } from '@/@types';
 import { MessageSender } from '@/shared/ports/message-sender.port';
 import { MessageHandlerInterface } from '@/bot/interfaces/index';
@@ -21,6 +21,7 @@ import {
 @Injectable()
 export class StartTreatmentHandler extends MessageHandlerInterface {
   readonly flowName = FLOW;
+  private readonly logger = new Logger(StartTreatmentHandler.name);
 
   constructor(
     private readonly registerTreatment: RegisterTreatmentUseCase,
@@ -92,7 +93,22 @@ export class StartTreatmentHandler extends MessageHandlerInterface {
   }
 
   private async commitFlow(jid: string, draft: TreatmentDraft): Promise<void> {
-    await this.persist(jid, draft);
+    try {
+      await this.persist(jid, draft);
+    } catch (err) {
+      this.state.clear(jid);
+
+      if (err instanceof BadRequestException) {
+        await this.reply(jid, err.message);
+      } else {
+        this.logger.error(
+          `Falha ao cadastrar tratamento para ${jid}: ${(err as Error).message}`,
+          (err as Error).stack,
+        );
+        await this.reply(jid, MESSAGES.persistError);
+      }
+      return;
+    }
     this.state.clear(jid);
     await this.reply(jid, MESSAGES.success);
   }
@@ -117,20 +133,27 @@ export class StartTreatmentHandler extends MessageHandlerInterface {
   private async persist(jid: string, draft: TreatmentDraft): Promise<void> {
     const user = await this.ensureUser.execute(jid);
     const medicationsIds: string[] = [];
+    const unresolved: string[] = [];
 
-    if (draft.medications) {
-      for (const medicationName of draft.medications) {
-        const matches = await this.findMedication.execute(
-          medicationName,
-          user.id,
-        );
-
-        if (matches.length != 1) {
-          console.log('Erro: É preciso definir qual a medicação a ser tomada.');
-        } else {
-          medicationsIds.push(matches[0].id);
-        }
+    for (const medicationName of draft.medications ?? []) {
+      const matches = await this.findMedication.execute(
+        medicationName,
+        user.id,
+      );
+      if (matches.length === 1) {
+        medicationsIds.push(matches[0].id);
+      } else {
+        unresolved.push(medicationName.trim());
       }
+    }
+
+    if (unresolved.length > 0) {
+      this.logger.warn(
+        `Medicamentos não resolvidos para ${jid}: ${unresolved.join(', ')}`,
+      );
+      throw new BadRequestException(
+        `Não encontrei estes medicamentos cadastrados: ${unresolved.join(', ')}. Cadastre-os antes de iniciar o tratamento.`,
+      );
     }
 
     await this.registerTreatment.execute({

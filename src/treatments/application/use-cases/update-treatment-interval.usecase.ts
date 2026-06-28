@@ -3,17 +3,15 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { randomUUID } from 'node:crypto';
 import { Treatment } from '@/treatments/domain/treatment.entity';
 import { TreatmentsRepository } from '@/treatments/domain/treatment.repository.port';
-import { RemindersRepository } from '@/reminders/domain/reminders.repository.port';
-import { Reminder } from '@/reminders/domain/reminder.entity';
+import { RegenerateTreatmentRemindersUseCase } from './regenerate-treatment-reminders.usecase';
 
 @Injectable()
 export class UpdateTreatmentIntervalUseCase {
   constructor(
     private readonly treatments: TreatmentsRepository,
-    private readonly reminders: RemindersRepository,
+    private readonly regenerateReminders: RegenerateTreatmentRemindersUseCase,
   ) {}
 
   async execute(
@@ -41,29 +39,7 @@ export class UpdateTreatmentIntervalUseCase {
     );
     const saved = await this.treatments.save(updated);
 
-    await this.regeneratePendingReminders(saved);
+    await this.regenerateReminders.execute(saved);
     return saved;
-  }
-
-  private async regeneratePendingReminders(
-    treatment: Treatment,
-  ): Promise<void> {
-    await this.reminders.deleteFutureUnsentByTreatmentId(treatment.id);
-
-    const all = await this.reminders.findByTreatmentId(treatment.id);
-    const lastSent = all
-      .filter((r) => r.sent)
-      .sort((a, b) => b.scheduledTime.getTime() - a.scheduledTime.getTime())[0];
-
-    let next = lastSent
-      ? treatment.nextDoseAfter(lastSent.confirmedAt ?? lastSent.scheduledTime)
-      : treatment.startTime;
-
-    while (next <= treatment.endTime) {
-      await this.reminders.save(
-        new Reminder(randomUUID(), treatment.id, next, false, null, null, null),
-      );
-      next = treatment.nextDoseAfter(next);
-    }
   }
 }

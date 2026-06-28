@@ -4,4 +4,7 @@ export type CreateMedicationInput = {
   quantity: number;
 };
 
-export type UpdateMedicationInput = Partial<CreateMedicationInput>;
+export type UpdateMedicationInput = {
+  name?: string;
+  quantity?: number;
+};

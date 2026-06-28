@@ -49,15 +49,11 @@ export class SetQuietHoursTool extends AiToolInterface {
     const input = (args ?? {}) as SetQuietHoursArgs;
     try {
       const user = await this.ensureUser.execute(jid);
+      await this.setQuietHours.execute(user.id, input);
+
       if (input.disable === true) {
-        await this.setQuietHours.execute(user.id, null, null);
         return 'Silêncio removido. O paciente vai voltar a receber lembretes a qualquer hora.';
       }
-      await this.setQuietHours.execute(
-        user.id,
-        input.start ?? null,
-        input.end ?? null,
-      );
       return `Silêncio configurado: lembretes entre ${input.start} e ${input.end} serão adiados para o próximo horário ativo.`;
     } catch (err) {
       return `Erro ao configurar silêncio: ${(err as Error).message}`;

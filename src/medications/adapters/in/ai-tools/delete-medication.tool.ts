@@ -3,7 +3,6 @@ import { AiToolDefinition } from '@/@types';
 import { AiToolInterface } from '@/bot/ai/interfaces/index';
 import { FindMedicationByNameUseCase } from '@/medications/application/use-cases/find-medication-by-name.usecase';
 import { DeleteMedicationUseCase } from '@/medications/application/use-cases/delete-medication.usecase';
-import { MedicationsRepository } from '@/medications/domain/medications.repository.port';
 import { EnsureUserByJidUseCase } from '@/users/application/use-cases/ensure-user-by-jid.usecase';
 
 type DeleteMedicationArgs = { name: string };
@@ -29,7 +28,6 @@ export class DeleteMedicationTool extends AiToolInterface {
   constructor(
     private readonly findByName: FindMedicationByNameUseCase,
     private readonly deleteMedication: DeleteMedicationUseCase,
-    private readonly medications: MedicationsRepository,
     private readonly ensureUser: EnsureUserByJidUseCase,
   ) {
     super();
@@ -47,13 +45,6 @@ export class DeleteMedicationTool extends AiToolInterface {
         return `Mais de um medicamento corresponde a "${input.name}". Peça ao paciente para ser mais específico antes de chamar a ferramenta de novo.`;
       }
       const medication = matches[0];
-
-      const activeTreatments = await this.medications.findTreatmentsOf(
-        medication.id,
-      );
-      if (activeTreatments.length > 0) {
-        return `Não posso apagar "${medication.name}" porque há ${activeTreatments.length} tratamento(s) ativo(s) usando este medicamento. Cancele o(s) tratamento(s) primeiro com cancel_treatment.`;
-      }
 
       await this.deleteMedication.execute(medication.id);
       return `Medicamento "${medication.name}" apagado.`;

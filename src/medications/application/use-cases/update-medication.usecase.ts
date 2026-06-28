@@ -13,7 +13,7 @@ export class UpdateMedicationUseCase {
 
     const merged = new Medication(
       current.id,
-      input.userId ?? current.userId,
+      current.userId,
       input.name?.trim() ?? current.name,
       input.quantity ?? current.quantity,
     );
