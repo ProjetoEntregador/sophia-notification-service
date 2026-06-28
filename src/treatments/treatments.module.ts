@@ -14,6 +14,7 @@ import { FindTreatmentByMedicationNameUseCase } from './application/use-cases/fi
 import { GetTreatmentSummaryUseCase } from './application/use-cases/get-treatment-summary.usecase';
 import { UpdateTreatmentIntervalUseCase } from './application/use-cases/update-treatment-interval.usecase';
 import { UpdateTreatmentEndDateUseCase } from './application/use-cases/update-treatment-end-date.usecase';
+import { RegenerateTreatmentRemindersUseCase } from './application/use-cases/regenerate-treatment-reminders.usecase';
 import { CancelTreatmentUseCase } from './application/use-cases/cancel-treatment.usecase';
 import { PauseTreatmentUseCase } from './application/use-cases/pause-treatment.usecase';
 import { ResumeTreatmentUseCase } from './application/use-cases/resume-treatment.usecase';
@@ -43,6 +44,7 @@ import { StartTreatmentHandler } from './adapters/in/whatsapp/start-treatment.ha
     GetTreatmentSummaryUseCase,
     UpdateTreatmentIntervalUseCase,
     UpdateTreatmentEndDateUseCase,
+    RegenerateTreatmentRemindersUseCase,
     CancelTreatmentUseCase,
     PauseTreatmentUseCase,
     ResumeTreatmentUseCase,

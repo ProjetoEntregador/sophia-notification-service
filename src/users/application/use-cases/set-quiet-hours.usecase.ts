@@ -8,15 +8,24 @@ import { User } from '@/users/domain/user.entity';
 
 const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
+export type SetQuietHoursInput = {
+  start?: string | null;
+  end?: string | null;
+  disable?: boolean;
+};
+
 @Injectable()
 export class SetQuietHoursUseCase {
   constructor(private readonly users: UsersRepository) {}
 
-  async execute(
-    userId: string,
-    start: string | null,
-    end: string | null,
-  ): Promise<User> {
+  async execute(userId: string, input: SetQuietHoursInput): Promise<User> {
+    if (input.disable) {
+      return this.applyChange(userId, null, null);
+    }
+
+    const start = input.start ?? null;
+    const end = input.end ?? null;
+
     if (start === null && end === null) {
       return this.applyChange(userId, null, null);
     }

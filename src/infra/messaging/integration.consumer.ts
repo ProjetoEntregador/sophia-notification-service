@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
 import { ConfirmChannel } from 'amqplib';
 
@@ -9,6 +9,8 @@ import { PharmacyMessagePayload } from '@/pharmacies/adapters/in/messaging/types
 
 @Injectable()
 export class IntegrationConsumer implements OnModuleInit {
+  private readonly logger = new Logger(IntegrationConsumer.name);
+
   constructor(
     private readonly rabbitmq: RabbitMQService,
     private readonly pharmacyHandler: FindNearbyPharmaciesHandler,
@@ -43,7 +45,10 @@ export class IntegrationConsumer implements OnModuleInit {
 
               channel.ack(msg);
             } catch (error) {
-              console.error(error);
+              this.logger.error(
+                `Falha ao processar resposta de farmácias: ${(error as Error).message}`,
+                (error as Error).stack,
+              );
 
               channel.nack(msg, false, true);
             }

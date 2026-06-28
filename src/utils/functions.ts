@@ -1,5 +1,3 @@
-import { TreatmentDraft } from '../treatments/adapters/in/whatsapp/types/treatment-flow.types';
-
 export function parseBrDate(input: string): Date | null {
   const match = /^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2})$/.exec(input);
   if (!match) return null;
@@ -20,17 +18,4 @@ export function toDate(
   if (value === undefined) return undefined;
   if (value === null) return null;
   return new Date(value);
-}
-
-export function buildTreatmentSummary(draft: TreatmentDraft): string {
-  const start = new Date(draft.startTime as string);
-  const end = new Date(draft.endTime as string);
-  return [
-    'Confirma os dados?',
-    `💊 ${draft.medications?.join(', ') as string}`,
-    `⏱ De ${draft.intervalHours as number} em ${draft.intervalHours as number} horas`,
-    `📅 ${formatBrDate(start)} → ${formatBrDate(end)}`,
-    '',
-    'Responda *SIM* para confirmar ou *CANCELAR*.',
-  ].join('\n');
 }

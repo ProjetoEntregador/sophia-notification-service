@@ -124,28 +124,18 @@ docker compose build sophia-notification-service && docker compose up -d
 
 > O `entrypoint.sh` do container já roda `yarn db:create` e `yarn migrate` antes de iniciar a app.
 
-### Testando endpoints
+### Como interagir
 
-A app responde em `http://localhost:3001`. Os endpoints atuais:
+A superfície HTTP é mínima — só um health check:
 
 ```http
-GET  /bot/status
-GET  /treatments
-POST /treatments
-GET  /treatments/:id
-PATCH /treatments/:id
-DELETE /treatments/:id
-
-GET  /reminders
-POST /reminders
-GET  /reminders/:id
-PATCH /reminders/:id
-DELETE /reminders/:id
+GET /bot/status   →   { "connected": true }   # true se o socket do WhatsApp está de pé
 ```
 
-Use o arquivo `src/http.http` (extensão REST Client do VS Code), Insomnia, Postman ou `curl`.
+A interação de verdade acontece por dois caminhos, **não por HTTP**:
 
-> O fluxo de conversa/IA **não** é HTTP: mensagens do WhatsApp chegam pelos _consumers_ de RabbitMQ (`src/infra/messaging/`), são roteadas pelo `MessageRouter` e, no fallback, tratadas pelo `AiOrchestratorHandler`. Para testar, basta mandar mensagem no WhatsApp conectado.
+- **WhatsApp** — mande mensagem (texto, áudio ou localização) no número conectado. As mensagens chegam pelos _consumers_ de RabbitMQ (`src/infra/messaging/`), são roteadas pelo `MessageRouter` para um handler estruturado (ex.: `cadastrar`, `1`, `2`) e, no fallback, vão para o `AiOrchestratorHandler` (IA + tools).
+- **Lembretes (cron)** — os disparos de dose e o auto-skip rodam por agendamento (`src/reminders/adapters/in/*.cron.ts`), sem chamada externa.
 
 ### Conectando ao Postgres a partir do host
 
@@ -157,84 +147,58 @@ psql postgres://postgres:123456789@localhost:5433/sophia_db
 
 ---
 
-## Como adicionar novos serviços/endpoints
+## Arquitetura
 
-A arquitetura segue SOLID. Use cada princípio como guia ao criar um novo módulo.
-
-### Estrutura de um módulo
-
-Novos domínios vão em `src/modules/<dominio>/`:
+Cada domínio (`medications`, `treatments`, `reminders`, `users`, `pharmacies`) é organizado em **arquitetura hexagonal** (Ports & Adapters), com quatro camadas. A regra que mantém tudo no lugar: **as dependências apontam sempre para dentro** — adapters dependem da aplicação, a aplicação depende do domínio, e o domínio não depende de ninguém.
 
 ```
-src/modules/<dominio>/
-  <dominio>.module.ts        # registra controller + provider(s)
-  <dominio>.controller.ts    # entrada HTTP (somente delegação)
-  <dominio>.service.ts       # regras de negócio + acesso a dados
+src/<dominio>/
+├── domain/                 # entidade + portas (contratos). Sem NestJS, sem Drizzle.
+│   ├── <entidade>.entity.ts        # entidade imutável, com as regras invariantes
+│   └── <x>.repository.port.ts      # abstract class = contrato do repositório
+├── application/            # casos de uso (1 arquivo = 1 ação) + DTOs de entrada/saída
+│   └── use-cases/*.usecase.ts
+└── adapters/
+    ├── in/                 # entradas que disparam casos de uso
+    │   ├── ai-tools/       #   tools da IA (tool calling)
+    │   ├── whatsapp/       #   handlers de fluxo estruturado
+    │   └── messaging/      #   consumidores de eventos
+    └── out/                # saídas (implementações das portas)
+        ├── drizzle-<x>.repository.ts   # implementação Postgres da porta
+        └── <x>.schema.ts               # mapeamento de tabela (Drizzle)
 ```
 
-Lembre de adicionar o módulo a `src/app.module.ts`.
+O `<dominio>.module.ts` é onde a inversão de dependência acontece: a porta (abstract class) é o token, o adapter concreto é o `useClass`.
 
-### Aplicando SOLID
+```ts
+providers: [
+  { provide: MedicationsRepository, useClass: DrizzleMedicationsRepository },
+  // use-cases e adapters in...
+];
+```
 
-#### **S — Single Responsibility**
+### Como os princípios SOLID aparecem aqui
 
-Cada classe tem **uma** razão para mudar.
-
-- **Controller**: apenas mapeia HTTP ↔ chamadas de service. Sem lógica de negócio, sem acesso a banco, sem `try/catch` de domínio.
-- **Service**: regras de negócio e queries.
-- **Schema** (`src/db/schema/`): forma das tabelas; nada além disso.
-- Se precisar enviar mensagens, use o `MessageSender` do `BotModule`. Não chame Baileys direto de um service de domínio.
-
-> 🚫 Anti-padrão: um controller que valida regra, monta entidade e chama o repositório. Mova para o service.
-
-#### **O — Open/Closed**
-
-Aberto a extensão, fechado a modificação.
-
-- Para reagir a um novo evento (ex.: enviar SMS além de WhatsApp), implemente um novo `MessageHandler` e registre-o como provider — sem editar o que já existe. Veja `LogMessageHandler` em `src/bot/messaging/log-message.handler.ts`.
-- Para acrescentar um novo presenter de QR code, basta uma nova classe que implementa `QrCodePresenter` e trocar o `useClass` no `BotModule`.
-
-#### **L — Liskov Substitution**
-
-Toda implementação de uma interface deve ser intercambiável.
-
-- Use as classes abstratas em `src/bot/interfaces/` (`MessageSender`, `SocketProvider`, `QrCodePresenter`, `MessageHandler`) como contratos. Não dependa de `MessageService` direto — dependa de `MessageSender`.
-- Se um teste for trocar `MessageSender` por um mock, isso tem que funcionar sem alterar o consumidor.
-
-#### **I — Interface Segregation**
-
-Interfaces pequenas e focadas.
-
-- Já fazemos isso ao separar `MessageSender` (envio) de `MessageHandler` (recepção) e `QrCodePresenter` (apresentação). Ao criar uma nova abstração, prefira várias interfaces pequenas a uma "Service" gigante.
-
-#### **D — Dependency Inversion**
-
-Módulos de alto nível dependem de abstrações.
-
-- Injete via construtor, sempre tipado pela classe abstrata, não pela implementação concreta:
+- **S (Responsabilidade única)** — cada caso de uso faz uma coisa: `RegisterMedicationUseCase`, `DeleteMedicationUseCase`, `RegenerateTreatmentRemindersUseCase`. Adapter não tem regra de negócio: ele traduz a entrada, chama o caso de uso e formata a saída. A regra "não apagar medicamento com tratamento ativo", por exemplo, vive em `DeleteMedicationUseCase` — não na tool da IA.
+- **O (Aberto/Fechado)** — para dar uma nova capacidade à IA, crie uma classe que estende `AiToolInterface` e registre no módulo; o `AiToolsRegistry` passa a expô-la sem nenhuma alteração no orquestrador. Mesma ideia para um novo fluxo de WhatsApp (`MessageHandlerInterface`) ou um novo presenter de QR code (`QrCodePresenter`).
+- **L (Substituição de Liskov)** — quem precisa do banco depende de `MedicationsRepository` (a porta), nunca de `DrizzleMedicationsRepository`. Trocar Postgres por outra implementação, ou por um fake em teste, não toca o caso de uso.
+- **I (Segregação de interface)** — as portas são pequenas e específicas: `Clock` (`now()`), `MessageSender` (envio), `TransactionRunner` (transação), `PharmaciesGateway` (consulta). Nada de "service gigante" com dezenas de métodos não relacionados.
+- **D (Inversão de dependência)** — injeção sempre pela abstração, no construtor. Para o banco, injete o token `DATABASE` (definido em `src/db/database.module.ts`), não o pool direto:
 
   ```ts
-  constructor(private readonly messageSender: MessageSender) {}
+  constructor(@Inject(DATABASE) private readonly db: NodePgDatabase) {}
   ```
 
-- Para acessar o banco, injete o token `DRIZZLE` (em `src/database.module.ts`), não importe o pool diretamente:
+### Receita: novo domínio passo a passo
 
-  ```ts
-  constructor(@Inject(DRIZZLE) private readonly db: NodePgDatabase) {}
-  ```
+1. **Domínio** — entidade imutável em `domain/<entidade>.entity.ts` (com as regras que não podem ser violadas) e a porta `domain/<x>.repository.port.ts` (abstract class).
+2. **Schema + migration** — tabela em `adapters/out/<x>.schema.ts` (e registre em `src/db/schema/index.ts`), depois `yarn drizzle:generate` no host e commite o SQL em `drizzle/`.
+3. **Adapter de saída** — `adapters/out/drizzle-<x>.repository.ts` implementando a porta, injetando o token `DATABASE`.
+4. **Casos de uso** — um arquivo por ação em `application/use-cases/`. Validação e regras moram aqui; lance `NotFoundException`/`BadRequestException`/`ConflictException` conforme o caso.
+5. **Adapters de entrada** — a tool da IA (`adapters/in/ai-tools/`), o handler de WhatsApp (`adapters/in/whatsapp/`) ou o consumidor de evento que dispara os casos de uso. Mantenha-os finos.
+6. **Module** — registre porta→adapter, casos de uso e adapters de entrada em `<dominio>.module.ts`; importe o módulo onde for consumido.
 
-### Receita: novo CRUD em 5 passos
-
-1. **Schema** em `src/db/schema/<entidade>.ts`. Exporte o tipo em `src/db/schema/types.ts`.
-2. **Migration**: `yarn drizzle:generate` no host. Commite os SQLs em `drizzle/`.
-3. **Service** em `src/modules/<dominio>/<dominio>.service.ts`:
-   - Injete `DRIZZLE`.
-   - Use um `private toValues()` para mapear input → linha do banco (converte datas, omite `undefined`). Veja `treatments.service.ts` como referência.
-   - Lance `NotFoundException` para id inexistente.
-4. **Controller** em `<dominio>.controller.ts`:
-   - Use `ParseUUIDPipe` para `:id`.
-   - Apenas delegue para o service. DTOs como `type` no topo do arquivo (ou em `dto/` se crescerem).
-5. **Module**: registre controller + service e importe em `AppModule`.
+> A entrada HTTP é mínima neste serviço (só `GET /bot/status` e os recursos legados). O grosso das entradas é via WhatsApp/RabbitMQ e tools da IA — por isso a camada `adapters/in/` tem mais que controllers REST.
 
 ### Como rebuildar após mudanças
 
@@ -263,37 +227,34 @@ docker compose build --no-cache sophia-notification-service && docker compose up
 ├── scripts/
 │   └── create-db.ts       # cria o banco se não existir (rodado pelo entrypoint)
 └── src/
-    ├── app.module.ts
     ├── main.ts
-    ├── database.module.ts # provider DRIZZLE (Pool pg + drizzle())
     ├── @types/            # tipos compartilhados (ai, whatsapp, messaging, ...)
-    ├── db/
-    │   ├── schema/        # tabelas: users, treatments, medications, reminders, chat_*
-    │   └── relations.ts
     ├── infra/
-    │   └── messaging/     # RabbitMQ (módulo, service, consumers, constants)
-    ├── shared/            # ports/contratos compartilhados (ex.: MessageSender)
-    ├── bot/               # módulo WhatsApp (Baileys)
-    │   ├── connection/
-    │   ├── interfaces/    # MessageSender, MessageHandler, ...
-    │   ├── messaging/     # MessageRouter + handlers estruturados + state
-    │   ├── presenters/
-    │   └── ai/            # assistente de IA: orquestrador, tools, histórico
-    │       ├── ai-orchestrator.handler.ts
-    │       ├── ai-tools.registry.ts
-    │       ├── local-ai.service.ts          # cliente do sophia-ai-service (chat)
-    │       ├── local-transcription.service.ts  # transcrição de áudio
-    │       ├── ai-tools/                     # implementações das tools
-    │       ├── domain/                       # ChatHistoryRepository (port)
-    │       └── adapters/out/                 # persistência Drizzle do histórico
-    ├── medications/       # domínio de medicamentos
-    ├── treatments/        # domínio de tratamentos
-    ├── reminders/         # domínio de doses/lembretes
-    ├── pharmacies/        # integração com sophia-pharmacy-service
-    └── users/             # domínio de usuários/pacientes
+    │   ├── nest/app.module.ts   # raiz da composição (imports de todos os módulos)
+    │   └── messaging/           # RabbitMQ (módulo, service, consumers, constants)
+    ├── db/
+    │   ├── database.module.ts   # provider do token DATABASE (Pool pg + drizzle())
+    │   ├── schema/              # tabelas: users, treatments, medications, reminders, chat_*
+    │   └── relations.ts
+    ├── shared/            # portas e adapters transversais
+    │   ├── ports/         #   Clock, MessageSender, TransactionRunner
+    │   └── adapters/      #   SystemClock, DrizzleTransactionRunner
+    ├── bot/               # entrada WhatsApp (Baileys) + roteamento + IA
+    │   ├── connection/    #   conexão/sessão Baileys
+    │   ├── interfaces/    #   MessageSender, MessageHandler, SocketProvider, ...
+    │   ├── messaging/     #   MessageRouter + handlers estruturados + state
+    │   ├── presenters/    #   QR code
+    │   └── ai/            #   orquestrador, AiToolsRegistry, clientes de IA, histórico
+    │
+    └── <dominio>/         # medications | treatments | reminders | users | pharmacies
+        ├── domain/                # entidade + portas (contratos)
+        ├── application/use-cases/ # casos de uso (1 ação por arquivo)
+        ├── adapters/in/           # ai-tools, whatsapp, messaging, crons
+        ├── adapters/out/          # drizzle-*.repository + *.schema
+        └── <dominio>.module.ts    # liga porta→adapter e registra os use cases
 ```
 
-> Os domínios ficam direto em `src/<dominio>/` (não em `src/modules/`). A seção SOLID acima continua valendo como guia ao criar um módulo novo.
+> Cada domínio segue a mesma estrutura hexagonal (ver seção **Arquitetura**). O `pharmacies` é o que mais foge: a saída é assíncrona via RabbitMQ (`rabbitmq-pharmacies.gateway.ts`) e a resposta volta pelo `IntegrationConsumer`.
 
 ---
 

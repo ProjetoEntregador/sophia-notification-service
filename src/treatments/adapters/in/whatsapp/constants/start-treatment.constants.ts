@@ -1,5 +1,6 @@
 import { TreatmentStep } from '../types/treatment-flow.types';
-import { buildTreatmentSummary, parseBrDate } from '@/utils/functions';
+import { parseBrDate } from '@/utils/functions';
+import { buildTreatmentSummary } from '../treatment-summary';
 
 export const FLOW = 'start_treatment';
 export const TRIGGERS = [
@@ -15,6 +16,8 @@ export const MESSAGES = {
     'Vamos cadastrar um novo tratamento. 💊\n(envie "cancelar" a qualquer momento)',
   cancelled: 'Cadastro cancelado.',
   success: 'Tratamento cadastrado com sucesso! ✅',
+  persistError:
+    'Não consegui concluir o cadastro agora. Tente novamente em alguns instantes.',
   invalidDate: 'Data inválida. Use o formato DD/MM/AAAA HH:mm.',
   emptyMedicine: 'Por favor, digite o nome do remédio.',
   invalidInterval: 'Número inválido. Digite um inteiro entre 1 e 24.',
