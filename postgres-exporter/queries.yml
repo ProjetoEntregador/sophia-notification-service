@@ -1,0 +1,335 @@
+pg_stat_activity_connections_by_state:
+  query: |
+    SELECT
+      COALESCE(datname, 'unknown') AS datname,
+      COALESCE(state, 'unknown') AS state,
+      COUNT(*)::float AS count
+    FROM pg_stat_activity
+    GROUP BY datname, state;
+  metrics:
+    - datname:
+        usage: 'LABEL'
+        description: 'Database name'
+    - state:
+        usage: 'LABEL'
+        description: 'Connection state'
+    - count:
+        usage: 'GAUGE'
+        description: 'Number of connections by state'
+
+pg_stat_activity_active_connections:
+  query: |
+    SELECT
+      COALESCE(datname, 'unknown') AS datname,
+      COUNT(*)::float AS count
+    FROM pg_stat_activity
+    WHERE state = 'active'
+    GROUP BY datname;
+  metrics:
+    - datname:
+        usage: 'LABEL'
+        description: 'Database name'
+    - count:
+        usage: 'GAUGE'
+        description: 'Number of active connections'
+
+pg_stat_activity_queries_by_user:
+  query: |
+    SELECT
+      COALESCE(datname, 'unknown') AS datname,
+      COALESCE(usename, 'unknown') AS usename,
+      COALESCE(state, 'unknown') AS state,
+      COUNT(*)::float AS count
+    FROM pg_stat_activity
+    GROUP BY datname, usename, state;
+  metrics:
+    - datname:
+        usage: 'LABEL'
+        description: 'Database name'
+    - usename:
+        usage: 'LABEL'
+        description: 'PostgreSQL user name'
+    - state:
+        usage: 'LABEL'
+        description: 'Connection state'
+    - count:
+        usage: 'GAUGE'
+        description: 'Number of connections by database, user and state'
+
+pg_stat_activity_long_running_queries:
+  query: |
+    SELECT
+      COALESCE(datname, 'unknown') AS datname,
+      COALESCE(usename, 'unknown') AS usename,
+      COALESCE(state, 'unknown') AS state,
+      COALESCE(wait_event_type, 'none') AS wait_event_type,
+      COALESCE(wait_event, 'none') AS wait_event,
+      COUNT(*)::float AS count
+    FROM pg_stat_activity
+    WHERE state <> 'idle'
+      AND query_start IS NOT NULL
+      AND now() - query_start > interval '10 seconds'
+    GROUP BY datname, usename, state, wait_event_type, wait_event;
+  metrics:
+    - datname:
+        usage: 'LABEL'
+        description: 'Database name'
+    - usename:
+        usage: 'LABEL'
+        description: 'PostgreSQL user name'
+    - state:
+        usage: 'LABEL'
+        description: 'Connection state'
+    - wait_event_type:
+        usage: 'LABEL'
+        description: 'Wait event type'
+    - wait_event:
+        usage: 'LABEL'
+        description: 'Wait event'
+    - count:
+        usage: 'GAUGE'
+        description: 'Number of long running active queries'
+
+pg_stat_activity_max_query_duration:
+  query: |
+    SELECT
+      COALESCE(datname, 'unknown') AS datname,
+      COALESCE(usename, 'unknown') AS usename,
+      COALESCE(state, 'unknown') AS state,
+      COALESCE(MAX(EXTRACT(EPOCH FROM (now() - query_start))), 0)::float AS duration_seconds
+    FROM pg_stat_activity
+    WHERE state <> 'idle'
+      AND query_start IS NOT NULL
+    GROUP BY datname, usename, state;
+  metrics:
+    - datname:
+        usage: 'LABEL'
+        description: 'Database name'
+    - usename:
+        usage: 'LABEL'
+        description: 'PostgreSQL user name'
+    - state:
+        usage: 'LABEL'
+        description: 'Connection state'
+    - duration_seconds:
+        usage: 'GAUGE'
+        description: 'Maximum active query duration in seconds'
+
+pg_stat_activity_wait_events:
+  query: |
+    SELECT
+      COALESCE(datname, 'unknown') AS datname,
+      COALESCE(wait_event_type, 'none') AS wait_event_type,
+      COALESCE(wait_event, 'none') AS wait_event,
+      COUNT(*)::float AS count
+    FROM pg_stat_activity
+    WHERE wait_event IS NOT NULL
+    GROUP BY datname, wait_event_type, wait_event;
+  metrics:
+    - datname:
+        usage: 'LABEL'
+        description: 'Database name'
+    - wait_event_type:
+        usage: 'LABEL'
+        description: 'Wait event type'
+    - wait_event:
+        usage: 'LABEL'
+        description: 'Wait event'
+    - count:
+        usage: 'GAUGE'
+        description: 'Number of sessions waiting by event'
+
+pg_stat_statements_top_total_time:
+  query: |
+    SELECT
+      db.datname,
+      md5(s.query) AS query_id,
+      LEFT(regexp_replace(s.query, E'\\s+', ' ', 'g'), 120) AS query_preview,
+      s.calls::float AS calls,
+      s.total_exec_time::float AS total_exec_time,
+      s.mean_exec_time::float AS mean_exec_time,
+      s.rows::float AS rows
+    FROM pg_stat_statements s
+    JOIN pg_database db
+      ON db.oid = s.dbid
+    WHERE db.datname NOT IN ('template0', 'template1')
+    ORDER BY s.total_exec_time DESC
+    LIMIT 20;
+  metrics:
+    - datname:
+        usage: 'LABEL'
+        description: 'Database name'
+    - query_id:
+        usage: 'LABEL'
+        description: 'Query hash'
+    - query_preview:
+        usage: 'LABEL'
+        description: 'Query preview'
+    - calls:
+        usage: 'GAUGE'
+        description: 'Number of times query was executed'
+    - total_exec_time:
+        usage: 'GAUGE'
+        description: 'Total execution time in milliseconds'
+    - mean_exec_time:
+        usage: 'GAUGE'
+        description: 'Mean execution time in milliseconds'
+    - rows:
+        usage: 'GAUGE'
+        description: 'Total rows returned'
+
+pg_stat_statements_top_mean_time:
+  query: |
+    SELECT
+      db.datname,
+      md5(s.query) AS query_id,
+      LEFT(regexp_replace(s.query, E'\\s+', ' ', 'g'), 120) AS query_preview,
+      s.calls::float AS calls,
+      s.total_exec_time::float AS total_exec_time,
+      s.mean_exec_time::float AS mean_exec_time,
+      s.rows::float AS rows
+    FROM pg_stat_statements s
+    JOIN pg_database db
+      ON db.oid = s.dbid
+    WHERE db.datname NOT IN ('template0', 'template1')
+    ORDER BY s.mean_exec_time DESC
+    LIMIT 20;
+  metrics:
+    - datname:
+        usage: 'LABEL'
+        description: 'Database name'
+    - query_id:
+        usage: 'LABEL'
+        description: 'Query hash'
+    - query_preview:
+        usage: 'LABEL'
+        description: 'Query preview'
+    - calls:
+        usage: 'GAUGE'
+        description: 'Number of times query was executed'
+    - total_exec_time:
+        usage: 'GAUGE'
+        description: 'Total execution time in milliseconds'
+    - mean_exec_time:
+        usage: 'GAUGE'
+        description: 'Mean execution time in milliseconds'
+    - rows:
+        usage: 'GAUGE'
+        description: 'Total rows returned'
+
+pg_stat_statements_most_called:
+  query: |
+    SELECT
+      db.datname,
+      md5(s.query) AS query_id,
+      LEFT(regexp_replace(s.query, E'\\s+', ' ', 'g'), 120) AS query_preview,
+      s.calls::float AS calls,
+      s.total_exec_time::float AS total_exec_time,
+      s.mean_exec_time::float AS mean_exec_time,
+      s.rows::float AS rows
+    FROM pg_stat_statements s
+    JOIN pg_database db
+      ON db.oid = s.dbid
+    WHERE db.datname NOT IN ('template0', 'template1')
+    ORDER BY s.calls DESC
+    LIMIT 20;
+  metrics:
+    - datname:
+        usage: 'LABEL'
+        description: 'Database name'
+    - query_id:
+        usage: 'LABEL'
+        description: 'Query hash'
+    - query_preview:
+        usage: 'LABEL'
+        description: 'Query preview'
+    - calls:
+        usage: 'GAUGE'
+        description: 'Number of times query was executed'
+    - total_exec_time:
+        usage: 'GAUGE'
+        description: 'Total execution time in milliseconds'
+    - mean_exec_time:
+        usage: 'GAUGE'
+        description: 'Mean execution time in milliseconds'
+    - rows:
+        usage: 'GAUGE'
+        description: 'Total rows returned'
+
+pg_stat_statements_most_rows:
+  query: |
+    SELECT
+      db.datname,
+      md5(s.query) AS query_id,
+      LEFT(regexp_replace(s.query, E'\\s+', ' ', 'g'), 120) AS query_preview,
+      s.calls::float AS calls,
+      s.total_exec_time::float AS total_exec_time,
+      s.mean_exec_time::float AS mean_exec_time,
+      s.rows::float AS rows
+    FROM pg_stat_statements s
+    JOIN pg_database db
+      ON db.oid = s.dbid
+    WHERE db.datname NOT IN ('template0', 'template1')
+    ORDER BY s.rows DESC
+    LIMIT 20;
+  metrics:
+    - datname:
+        usage: 'LABEL'
+        description: 'Database name'
+    - query_id:
+        usage: 'LABEL'
+        description: 'Query hash'
+    - query_preview:
+        usage: 'LABEL'
+        description: 'Query preview'
+    - calls:
+        usage: 'GAUGE'
+        description: 'Number of times query was executed'
+    - total_exec_time:
+        usage: 'GAUGE'
+        description: 'Total execution time in milliseconds'
+    - mean_exec_time:
+        usage: 'GAUGE'
+        description: 'Mean execution time in milliseconds'
+    - rows:
+        usage: 'GAUGE'
+        description: 'Total rows returned'
+
+pg_stat_statements_io_time:
+  query: |
+    SELECT
+      db.datname,
+      md5(s.query) AS query_id,
+      LEFT(regexp_replace(s.query, E'\\s+', ' ', 'g'), 120) AS query_preview,
+      s.calls::float AS calls,
+      s.blk_read_time::float AS blk_read_time,
+      s.blk_write_time::float AS blk_write_time,
+      (s.blk_read_time + s.blk_write_time)::float AS total_io_time
+    FROM pg_stat_statements s
+    JOIN pg_database db
+      ON db.oid = s.dbid
+    WHERE db.datname NOT IN ('template0', 'template1')
+    ORDER BY (s.blk_read_time + s.blk_write_time) DESC
+    LIMIT 20;
+  metrics:
+    - datname:
+        usage: 'LABEL'
+        description: 'Database name'
+    - query_id:
+        usage: 'LABEL'
+        description: 'Query hash'
+    - query_preview:
+        usage: 'LABEL'
+        description: 'Query preview'
+    - calls:
+        usage: 'GAUGE'
+        description: 'Number of times query was executed'
+    - blk_read_time:
+        usage: 'GAUGE'
+        description: 'Time spent reading blocks in milliseconds'
+    - blk_write_time:
+        usage: 'GAUGE'
+        description: 'Time spent writing blocks in milliseconds'
+    - total_io_time:
+        usage: 'GAUGE'
+        description: 'Total I/O time in milliseconds'

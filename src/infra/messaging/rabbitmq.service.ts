@@ -14,11 +14,13 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
   public internalChannel: ChannelWrapper;
   public outboundChannel: ChannelWrapper;
   public inboundChannel: ChannelWrapper;
+  public auditChannel: ChannelWrapper;
 
   onModuleInit() {
     this.setupInternalChannel();
     this.setupOutboundChannel();
     this.setupInboundChannel();
+    this.setupAuditChannel();
   }
 
   private setupInternalChannel() {
@@ -89,6 +91,32 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
+  private setupAuditChannel() {
+    this.auditChannel = this.connection.createChannel({
+      setup: async (channel: ConfirmChannel) => {
+        await channel.assertExchange(
+          process.env.MESSAGE_EXCHANGES_PHARMACY,
+          'topic',
+          {
+            durable: true,
+          },
+        );
+
+        await channel.assertQueue(process.env.MESSAGE_AUDIT_QUEUE, {
+          durable: true,
+        });
+
+        await channel.bindQueue(
+          process.env.MESSAGE_AUDIT_QUEUE,
+          process.env.MESSAGE_EXCHANGES_PHARMACY,
+          process.env.MESSAGE_AUDIT_ROUTING_KEY,
+        );
+
+        channel.prefetch(20);
+      },
+    });
+  }
+
   async publishInternalEvent(payload: NotificationEventPayload) {
     await this.internalChannel.publish(
       process.env.MESSAGE_EXCHANGES_NOTIFICATION!,
@@ -101,6 +129,14 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
     await this.outboundChannel.publish(
       process.env.MESSAGE_EXCHANGES_PHARMACY!,
       process.env.MESSAGE_PHARMACY_INCOMING_ROUTING_KEY!,
+      JSON.stringify(payload),
+    );
+  }
+
+  async publishToAudit(payload: PharmacyEventPayload) {
+    await this.auditChannel.publish(
+      process.env.MESSAGE_EXCHANGES_PHARMACY!,
+      process.env.MESSAGE_AUDIT_ROUTING_KEY!,
       JSON.stringify(payload),
     );
   }
