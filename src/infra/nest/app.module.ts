@@ -11,6 +11,7 @@ import { UsersModule } from 'src/users/users.module';
 import { PharmaciesModule } from 'src/pharmacies/pharmacies.module';
 import { ConfigModule } from '@nestjs/config';
 import { RabbitMQModule } from '../messaging/rabbitmq.module';
+import { AuditModule } from '@/audit/audit.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { RabbitMQModule } from '../messaging/rabbitmq.module';
     }),
     SharedModule,
     RabbitMQModule,
+    AuditModule,
     BotModule,
     DatabaseModule,
     ScheduleModule.forRoot(),

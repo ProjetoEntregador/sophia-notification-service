@@ -8,12 +8,16 @@ import { Treatment } from '@/treatments/domain/treatment.entity';
 import { Medication } from '@/medications/domain/medication.entity';
 import { MedicationsRepository } from '@/medications/domain/medications.repository.port';
 import { treatmentsToMedications } from '@/treatments/adapters/out/treatment-medication-link.schema';
+import { AuditPublisher } from '@/audit/domain/audit-publisher.port';
 
 type MedicationRow = typeof medications.$inferSelect;
 
 @Injectable()
 export class DrizzleMedicationsRepository extends MedicationsRepository {
-  constructor(@Inject(DATABASE) private readonly db: NodePgDatabase) {
+  constructor(
+    @Inject(DATABASE) private readonly db: NodePgDatabase,
+    private readonly audit: AuditPublisher,
+  ) {
     super();
   }
 
@@ -84,16 +88,28 @@ export class DrizzleMedicationsRepository extends MedicationsRepository {
   }
 
   async save(medication: Medication): Promise<Medication> {
+    const previous = await this.findById(medication.id);
     const row = this.toRow(medication);
     await this.db
       .insert(medications)
       .values(row)
       .onConflictDoUpdate({ target: medications.id, set: row });
+
+    await this.audit.record({
+      entity: 'medication',
+      operation: previous ? 'UPDATE' : 'INSERT',
+      oldData: previous,
+      newData: medication,
+      changedBy: medication.userId,
+    });
+
     return medication;
   }
 
   async delete(id: string): Promise<boolean> {
-    return this.db.transaction(async (tx) => {
+    const previous = await this.findById(id);
+
+    const deleted = await this.db.transaction(async (tx) => {
       await tx
         .delete(treatmentsToMedications)
         .where(eq(treatmentsToMedications.medicationId, id));
@@ -104,6 +120,18 @@ export class DrizzleMedicationsRepository extends MedicationsRepository {
         .returning({ id: medications.id });
       return result.length > 0;
     });
+
+    if (deleted && previous) {
+      await this.audit.record({
+        entity: 'medication',
+        operation: 'DELETE',
+        oldData: previous,
+        newData: null,
+        changedBy: previous.userId,
+      });
+    }
+
+    return deleted;
   }
 
   private toEntity(row: MedicationRow): Medication {
