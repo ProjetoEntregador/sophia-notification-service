@@ -123,7 +123,7 @@ export class DrizzleMedicationsRepository extends MedicationsRepository {
 
     if (deleted && previous) {
       await this.audit.record({
-        entity: 'medication',
+        entity: 'notification_medication',
         operation: 'DELETE',
         oldData: previous,
         newData: null,
