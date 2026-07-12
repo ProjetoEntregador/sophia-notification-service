@@ -50,7 +50,7 @@ export class DrizzleUsersRepository extends UsersRepository {
     const savedEntity = this.toEntity(saved);
 
     await this.audit.record({
-      entity: 'user',
+      entity: 'notification_user',
       operation: previous ? 'UPDATE' : 'INSERT',
       oldData: previous,
       newData: savedEntity,

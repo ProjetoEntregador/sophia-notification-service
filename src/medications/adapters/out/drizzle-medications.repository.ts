@@ -96,7 +96,7 @@ export class DrizzleMedicationsRepository extends MedicationsRepository {
       .onConflictDoUpdate({ target: medications.id, set: row });
 
     await this.audit.record({
-      entity: 'medication',
+      entity: 'notification_medication',
       operation: previous ? 'UPDATE' : 'INSERT',
       oldData: previous,
       newData: medication,

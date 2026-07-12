@@ -112,6 +112,8 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
           process.env.MESSAGE_EXCHANGES_AUDIT,
           process.env.MESSAGE_AUDIT_ROUTING_KEY,
         );
+
+        channel.prefetch(20);
       },
     });
   }
@@ -136,6 +138,14 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
     await this.outboundChannel.publish(
       process.env.MESSAGE_EXCHANGES_PHARMACY!,
       process.env.MESSAGE_PHARMACY_INCOMING_ROUTING_KEY!,
+      JSON.stringify(payload),
+    );
+  }
+
+  async publishToAudit(payload: PharmacyEventPayload) {
+    await this.auditChannel.publish(
+      process.env.MESSAGE_EXCHANGES_PHARMACY!,
+      process.env.MESSAGE_AUDIT_ROUTING_KEY!,
       JSON.stringify(payload),
     );
   }
