@@ -7,13 +7,17 @@ import { reminders } from '@/reminders/adapters/out/reminder.schema';
 import { UsersRepository } from '@/users/domain/users.repository.port';
 import { UserOverview } from '@/users/domain/user-overview.type';
 import { User } from '@/users/domain/user.entity';
+import { AuditPublisher } from '@/audit/domain/audit-publisher.port';
 import { users } from './user.schema';
 
 type UserRow = typeof users.$inferSelect;
 
 @Injectable()
 export class DrizzleUsersRepository extends UsersRepository {
-  constructor(@Inject(DATABASE) private readonly db: NodePgDatabase) {
+  constructor(
+    @Inject(DATABASE) private readonly db: NodePgDatabase,
+    private readonly audit: AuditPublisher,
+  ) {
     super();
   }
 
@@ -36,13 +40,24 @@ export class DrizzleUsersRepository extends UsersRepository {
   }
 
   async save(user: User): Promise<User> {
+    const previous = await this.findById(user.id);
     const row = this.toRow(user);
     const [saved] = await this.db
       .insert(users)
       .values(row)
       .onConflictDoUpdate({ target: users.id, set: row })
       .returning();
-    return this.toEntity(saved);
+    const savedEntity = this.toEntity(saved);
+
+    await this.audit.record({
+      entity: 'notification_user',
+      operation: previous ? 'UPDATE' : 'INSERT',
+      oldData: previous,
+      newData: savedEntity,
+      changedBy: savedEntity.id,
+    });
+
+    return savedEntity;
   }
 
   async getOverview(userId: string): Promise<UserOverview> {

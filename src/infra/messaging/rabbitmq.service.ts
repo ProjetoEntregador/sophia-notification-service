@@ -7,6 +7,7 @@ import { ChannelWrapper } from 'amqp-connection-manager';
 import { ConfirmChannel } from 'amqplib';
 
 import { NotificationEventPayload, PharmacyEventPayload } from '@/@types';
+import { AuditEvent } from '@/audit/domain/audit-event';
 
 @Injectable()
 export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
@@ -95,7 +96,7 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
     this.auditChannel = this.connection.createChannel({
       setup: async (channel: ConfirmChannel) => {
         await channel.assertExchange(
-          process.env.MESSAGE_EXCHANGES_PHARMACY,
+          process.env.MESSAGE_EXCHANGES_AUDIT,
           'topic',
           {
             durable: true,
@@ -108,13 +109,21 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
 
         await channel.bindQueue(
           process.env.MESSAGE_AUDIT_QUEUE,
-          process.env.MESSAGE_EXCHANGES_PHARMACY,
+          process.env.MESSAGE_EXCHANGES_AUDIT,
           process.env.MESSAGE_AUDIT_ROUTING_KEY,
         );
 
         channel.prefetch(20);
       },
     });
+  }
+
+  async publishAuditEvent(payload: AuditEvent) {
+    await this.auditChannel.publish(
+      process.env.MESSAGE_EXCHANGES_AUDIT!,
+      process.env.MESSAGE_AUDIT_ROUTING_KEY!,
+      Buffer.from(JSON.stringify(payload)),
+    );
   }
 
   async publishInternalEvent(payload: NotificationEventPayload) {

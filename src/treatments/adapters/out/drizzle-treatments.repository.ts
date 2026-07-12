@@ -7,6 +7,7 @@ import { Treatment } from '@/treatments/domain/treatment.entity';
 import { treatmentsToMedications } from './treatment-medication-link.schema';
 import { TreatmentsRepository } from '@/treatments/domain/treatment.repository.port';
 import { TransactionExecutor } from '@/shared/ports/transaction-runner.port';
+import { AuditPublisher } from '@/audit/domain/audit-publisher.port';
 
 type DrizzleExecutor = NodePgDatabase;
 
@@ -14,7 +15,10 @@ type TreatmentRow = typeof treatments.$inferSelect;
 
 @Injectable()
 export class DrizzleTreatmentsRepository extends TreatmentsRepository {
-  constructor(@Inject(DATABASE) private readonly db: NodePgDatabase) {
+  constructor(
+    @Inject(DATABASE) private readonly db: NodePgDatabase,
+    private readonly audit: AuditPublisher,
+  ) {
     super();
   }
 
@@ -48,6 +52,8 @@ export class DrizzleTreatmentsRepository extends TreatmentsRepository {
     treatment: Treatment,
     tx?: TransactionExecutor,
   ): Promise<Treatment> {
+    const previous = await this.findById(treatment.id);
+
     const action = async (executor: DrizzleExecutor): Promise<Treatment> => {
       const row = this.toRow(treatment);
 
@@ -72,20 +78,45 @@ export class DrizzleTreatmentsRepository extends TreatmentsRepository {
       return treatment;
     };
 
-    if (tx) return action(tx as DrizzleExecutor);
-    return this.db.transaction(action);
+    const saved = tx
+      ? await action(tx as DrizzleExecutor)
+      : await this.db.transaction(action);
+
+    await this.audit.record({
+      entity: 'treatment',
+      operation: previous ? 'UPDATE' : 'INSERT',
+      oldData: previous,
+      newData: saved,
+      changedBy: saved.userId,
+    });
+
+    return saved;
   }
 
   async cancel(id: string, at: Date): Promise<boolean> {
+    const previous = await this.findById(id);
     const result = await this.db
       .update(treatments)
       .set({ cancelledAt: at })
       .where(and(eq(treatments.id, id), isNull(treatments.cancelledAt)))
       .returning({ id: treatments.id });
-    return result.length > 0;
+    const changed = result.length > 0;
+
+    if (changed && previous) {
+      await this.audit.record({
+        entity: 'treatment',
+        operation: 'UPDATE',
+        oldData: previous,
+        newData: previous.withCancellation(at),
+        changedBy: previous.userId,
+      });
+    }
+
+    return changed;
   }
 
   async pause(id: string, at: Date): Promise<boolean> {
+    const previous = await this.findById(id);
     const result = await this.db
       .update(treatments)
       .set({ pausedAt: at })
@@ -97,20 +128,47 @@ export class DrizzleTreatmentsRepository extends TreatmentsRepository {
         ),
       )
       .returning({ id: treatments.id });
-    return result.length > 0;
+    const changed = result.length > 0;
+
+    if (changed && previous) {
+      await this.audit.record({
+        entity: 'treatment',
+        operation: 'UPDATE',
+        oldData: previous,
+        newData: previous.withPause(at),
+        changedBy: previous.userId,
+      });
+    }
+
+    return changed;
   }
 
   async resume(id: string): Promise<boolean> {
+    const previous = await this.findById(id);
     const result = await this.db
       .update(treatments)
       .set({ pausedAt: null })
       .where(and(eq(treatments.id, id), isNull(treatments.cancelledAt)))
       .returning({ id: treatments.id });
-    return result.length > 0;
+    const changed = result.length > 0;
+
+    if (changed && previous) {
+      await this.audit.record({
+        entity: 'treatment',
+        operation: 'UPDATE',
+        oldData: previous,
+        newData: previous.withResume(),
+        changedBy: previous.userId,
+      });
+    }
+
+    return changed;
   }
 
   async delete(id: string): Promise<boolean> {
-    return this.db.transaction(async (tx) => {
+    const previous = await this.findById(id);
+
+    const deleted = await this.db.transaction(async (tx) => {
       await tx
         .delete(treatmentsToMedications)
         .where(eq(treatmentsToMedications.treatmentId, id));
@@ -121,6 +179,18 @@ export class DrizzleTreatmentsRepository extends TreatmentsRepository {
         .returning({ id: treatments.id });
       return result.length > 0;
     });
+
+    if (deleted && previous) {
+      await this.audit.record({
+        entity: 'treatment',
+        operation: 'DELETE',
+        oldData: previous,
+        newData: null,
+        changedBy: previous.userId,
+      });
+    }
+
+    return deleted;
   }
 
   private async toEntity(row: TreatmentRow): Promise<Treatment> {
