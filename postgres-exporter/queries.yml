@@ -153,6 +153,13 @@ pg_stat_statements_top_total_time:
     JOIN pg_database db
       ON db.oid = s.dbid
     WHERE db.datname NOT IN ('template0', 'template1')
+      AND upper(ltrim(s.query)) ~ '^(SELECT|INSERT|UPDATE|DELETE)(\s|$)'
+      AND s.query ~* '\m(chat_messages|medications|reminders|treatments|users)\M'
+      AND s.query NOT ILIKE '%pg_sleep%'
+      AND s.query NOT ILIKE '%pg_database_size%'
+      AND s.query NOT ILIKE '%pg_stat_%'
+      AND s.query NOT ILIKE '%pg_catalog%'
+      AND s.query NOT ILIKE '%information_schema%'
     ORDER BY s.total_exec_time DESC
     LIMIT 20;
   metrics:
@@ -192,6 +199,13 @@ pg_stat_statements_top_mean_time:
     JOIN pg_database db
       ON db.oid = s.dbid
     WHERE db.datname NOT IN ('template0', 'template1')
+      AND upper(ltrim(s.query)) ~ '^(SELECT|INSERT|UPDATE|DELETE)(\s|$)'
+      AND s.query ~* '\m(chat_messages|medications|reminders|treatments|users)\M'
+      AND s.query NOT ILIKE '%pg_sleep%'
+      AND s.query NOT ILIKE '%pg_database_size%'
+      AND s.query NOT ILIKE '%pg_stat_%'
+      AND s.query NOT ILIKE '%pg_catalog%'
+      AND s.query NOT ILIKE '%information_schema%'
     ORDER BY s.mean_exec_time DESC
     LIMIT 20;
   metrics:
@@ -231,6 +245,13 @@ pg_stat_statements_most_called:
     JOIN pg_database db
       ON db.oid = s.dbid
     WHERE db.datname NOT IN ('template0', 'template1')
+      AND upper(ltrim(s.query)) ~ '^(SELECT|INSERT|UPDATE|DELETE)(\s|$)'
+      AND s.query ~* '\m(chat_messages|medications|reminders|treatments|users)\M'
+      AND s.query NOT ILIKE '%pg_sleep%'
+      AND s.query NOT ILIKE '%pg_database_size%'
+      AND s.query NOT ILIKE '%pg_stat_%'
+      AND s.query NOT ILIKE '%pg_catalog%'
+      AND s.query NOT ILIKE '%information_schema%'
     ORDER BY s.calls DESC
     LIMIT 20;
   metrics:
@@ -270,6 +291,13 @@ pg_stat_statements_most_rows:
     JOIN pg_database db
       ON db.oid = s.dbid
     WHERE db.datname NOT IN ('template0', 'template1')
+      AND upper(ltrim(s.query)) ~ '^(SELECT|INSERT|UPDATE|DELETE)(\s|$)'
+      AND s.query ~* '\m(chat_messages|medications|reminders|treatments|users)\M'
+      AND s.query NOT ILIKE '%pg_sleep%'
+      AND s.query NOT ILIKE '%pg_database_size%'
+      AND s.query NOT ILIKE '%pg_stat_%'
+      AND s.query NOT ILIKE '%pg_catalog%'
+      AND s.query NOT ILIKE '%information_schema%'
     ORDER BY s.rows DESC
     LIMIT 20;
   metrics:
@@ -309,6 +337,13 @@ pg_stat_statements_io_time:
     JOIN pg_database db
       ON db.oid = s.dbid
     WHERE db.datname NOT IN ('template0', 'template1')
+      AND upper(ltrim(s.query)) ~ '^(SELECT|INSERT|UPDATE|DELETE)(\s|$)'
+      AND s.query ~* '\m(chat_messages|medications|reminders|treatments|users)\M'
+      AND s.query NOT ILIKE '%pg_sleep%'
+      AND s.query NOT ILIKE '%pg_database_size%'
+      AND s.query NOT ILIKE '%pg_stat_%'
+      AND s.query NOT ILIKE '%pg_catalog%'
+      AND s.query NOT ILIKE '%information_schema%'
     ORDER BY (s.blk_read_time + s.blk_write_time) DESC
     LIMIT 20;
   metrics:

@@ -82,7 +82,7 @@ export class DrizzleTreatmentsRepository extends TreatmentsRepository {
       ? await action(tx as DrizzleExecutor)
       : await this.db.transaction(action);
 
-    await this.audit.record({
+    void this.audit.record({
       entity: 'treatment',
       operation: previous ? 'UPDATE' : 'INSERT',
       oldData: previous,
@@ -103,7 +103,7 @@ export class DrizzleTreatmentsRepository extends TreatmentsRepository {
     const changed = result.length > 0;
 
     if (changed && previous) {
-      await this.audit.record({
+      void this.audit.record({
         entity: 'treatment',
         operation: 'UPDATE',
         oldData: previous,
@@ -131,7 +131,7 @@ export class DrizzleTreatmentsRepository extends TreatmentsRepository {
     const changed = result.length > 0;
 
     if (changed && previous) {
-      await this.audit.record({
+      void this.audit.record({
         entity: 'treatment',
         operation: 'UPDATE',
         oldData: previous,
@@ -153,7 +153,7 @@ export class DrizzleTreatmentsRepository extends TreatmentsRepository {
     const changed = result.length > 0;
 
     if (changed && previous) {
-      await this.audit.record({
+      void this.audit.record({
         entity: 'treatment',
         operation: 'UPDATE',
         oldData: previous,
@@ -181,7 +181,7 @@ export class DrizzleTreatmentsRepository extends TreatmentsRepository {
     });
 
     if (deleted && previous) {
-      await this.audit.record({
+      void this.audit.record({
         entity: 'treatment',
         operation: 'DELETE',
         oldData: previous,

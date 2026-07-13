@@ -95,7 +95,7 @@ export class DrizzleMedicationsRepository extends MedicationsRepository {
       .values(row)
       .onConflictDoUpdate({ target: medications.id, set: row });
 
-    await this.audit.record({
+    void this.audit.record({
       entity: 'notification_medication',
       operation: previous ? 'UPDATE' : 'INSERT',
       oldData: previous,
@@ -122,7 +122,7 @@ export class DrizzleMedicationsRepository extends MedicationsRepository {
     });
 
     if (deleted && previous) {
-      await this.audit.record({
+      void this.audit.record({
         entity: 'notification_medication',
         operation: 'DELETE',
         oldData: previous,
