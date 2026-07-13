@@ -17,9 +17,9 @@ services:
       - ./db/init:/docker-entrypoint-initdb.d
       - ./logs:/var/log/postgresql
     environment:
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_PASSWORD=${NOTIFICATION_DB_PASSWORD}
+      - POSTGRES_USER=${NOTIFICATION_DB_USER}
+      - POSTGRES_DB=${NOTIFICATION_DB_NAME}
     command:
       - 'postgres'
       - '-c'
@@ -77,7 +77,7 @@ services:
     depends_on:
       - sophia-postgres
     environment:
-      DATA_SOURCE_NAME: 'postgresql://${DB_USER}:${DB_PASSWORD}@sophia-postgres:5432/${DB_NAME}?sslmode=disable'
+      DATA_SOURCE_NAME: 'postgresql://${NOTIFICATION_DB_USER}:${NOTIFICATION_DB_PASSWORD}@sophia-postgres:5432/${NOTIFICATION_DB_NAME}?sslmode=disable'
       PG_EXPORTER_EXTEND_QUERY_PATH: '/etc/postgres_exporter/queries.yml'
     volumes:
       - ./postgres-exporter/queries.yml:/etc/postgres_exporter/queries.yml
@@ -94,9 +94,9 @@ services:
     environment:
       POSTGRES_HOST: sophia-postgres
       POSTGRES_PORT: 5432
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${NOTIFICATION_DB_USER}
+      POSTGRES_PASSWORD: ${NOTIFICATION_DB_PASSWORD}
+      POSTGRES_DB: ${NOTIFICATION_DB_NAME}
       BACKUP_RETENTION_DAYS: 7
     volumes:
       - ./backups:/backups
@@ -122,9 +122,9 @@ services:
     environment:
       POSTGRES_HOST: sophia-postgres
       POSTGRES_PORT: 5432
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${NOTIFICATION_DB_USER}
+      POSTGRES_PASSWORD: ${NOTIFICATION_DB_PASSWORD}
+      POSTGRES_DB: ${NOTIFICATION_DB_NAME}
       LOG_RETENTION_DAYS: 7
     volumes:
       - ./scripts/maintenance.sh:/scripts/maintenance.sh

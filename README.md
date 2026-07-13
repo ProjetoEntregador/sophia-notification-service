@@ -53,13 +53,13 @@ A IA pode acionar (via `AiToolsRegistry`):
 1. Copie o `.env.example` (se existir) ou use o `.env` atual. As variáveis essenciais:
 
    ```env
-   PORT=3000                # porta INTERNA do container; não mude
-   DB_NAME=sophia_db
-   DB_USER=postgres
-   DB_PASSWORD=your-db-password
+   NOTIFICATION_PORT=3000                # porta INTERNA do container; não mude
+   NOTIFICATION_DB_NAME=sophia_db
+   NOTIFICATION_DB_USER=postgres
+   NOTIFICATION_DB_PASSWORD=your-db-password
    DB_HOST=sophia-postgres  # nome do serviço no compose
    DB_PORT=5432             # porta INTERNA do container do Postgres
-   DATABASE_URL=postgres://postgres:your-db-password@sophia-postgres:5432/sophia_db
+   NOTIFICATION_DATABASE_URL=postgres://postgres:your-db-password@sophia-postgres:5432/sophia_db
 
    # IA (sophia-ai-service: Groq primário -> Gemini fallback)
    AI_SERVICE_URL=http://host.docker.internal:5000
@@ -114,10 +114,10 @@ O fluxo é dividido entre host e container:
 | Aplicar SQL no banco                 | container                            | `yarn migrate:docker`   |
 | Criar o banco caso não exista        | container (automático no entrypoint) | `yarn db:create:docker` |
 
-Para gerar SQL no host, exporte um `DATABASE_URL` com `localhost:5433`:
+Para gerar SQL no host, exporte um `NOTIFICATION_DATABASE_URL` com `localhost:5433`:
 
 ```bash
-DATABASE_URL=postgres://postgres:123456789@localhost:5433/sophia_db yarn drizzle:generate
+NOTIFICATION_DATABASE_URL=postgres://postgres:123456789@localhost:5433/sophia_db yarn drizzle:generate
 git add drizzle/
 docker compose build sophia-notification-service && docker compose up -d
 ```

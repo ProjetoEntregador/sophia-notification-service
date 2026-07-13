@@ -3,7 +3,7 @@ set -euo pipefail
 
 DB_HOST="${DB_HOST:-postgres}"
 DB_PORT="${DB_PORT:-5432}"
-DB_USER="${DB_USER:-postgres}"
+NOTIFICATION_DB_USER="${NOTIFICATION_DB_USER:-postgres}"
 
 echo "Aguardando PostgreSQL em ${DB_HOST}:${DB_PORT}..."
 

@@ -2,9 +2,9 @@ import 'dotenv/config';
 import { Client } from 'pg';
 
 async function ensureDatabase() {
-  const databaseUrl = process.env.DATABASE_URL;
+  const databaseUrl = process.env.NOTIFICATION_DATABASE_URL;
   if (!databaseUrl) {
-    console.error('DATABASE_URL não definido');
+    console.error('NOTIFICATION_DATABASE_URL não definido');
     process.exit(1);
   }
 
@@ -12,13 +12,13 @@ async function ensureDatabase() {
   try {
     url = new URL(databaseUrl);
   } catch {
-    console.error('DATABASE_URL inválida');
+    console.error('NOTIFICATION_DATABASE_URL inválida');
     process.exit(1);
   }
 
   const dbName = url.pathname?.replace(/^\//, '') || '';
   if (!dbName) {
-    console.error('Nome do banco não encontrado na DATABASE_URL');
+    console.error('Nome do banco não encontrado na NOTIFICATION_DATABASE_URL');
     process.exit(1);
   }
 
