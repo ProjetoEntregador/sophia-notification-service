@@ -10,6 +10,7 @@ import {
   buildSystemPrompt,
   MAX_TOOL_ITERATIONS,
 } from './ai.constants';
+import { sanitizeAiText } from './sanitize-ai-text';
 
 @Injectable()
 export class AiOrchestratorHandler extends MessageHandlerInterface {
@@ -80,17 +81,24 @@ export class AiOrchestratorHandler extends MessageHandlerInterface {
       });
 
       const hasTools = !!response.toolCalls?.length;
+      const safeText = sanitizeAiText(response.text);
+
+      if (safeText !== (response.text ?? '').trim()) {
+        this.logger.warn(
+          `Texto da IA continha pseudo tool call e foi sanitizado para ${jid}`,
+        );
+      }
 
       await this.history.append(jid, {
         role: 'assistant',
-        content: response.text,
+        content: safeText,
         toolCalls: response.toolCalls,
       });
 
       if (!hasTools) {
-        if (response.text) {
+        if (safeText) {
           await this.sender.typingMessage(jid);
-          await this.sender.sendText(jid, response.text);
+          await this.sender.sendText(jid, safeText);
         }
         return;
       }
