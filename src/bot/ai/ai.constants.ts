@@ -1,6 +1,6 @@
 export const AI_FLOW = 'ai_chat';
 export const MAX_TOOL_ITERATIONS = 10;
-export const MAX_HISTORY_MESSAGES = 30;
+export const MAX_HISTORY_MESSAGES = 20;
 
 export const AI_FALLBACK_MESSAGE =
   'Estou com dificuldades para responder agora. Pode tentar de novo em alguns minutos?\n\n' +
