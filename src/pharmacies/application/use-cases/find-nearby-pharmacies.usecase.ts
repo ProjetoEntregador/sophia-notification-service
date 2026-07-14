@@ -21,6 +21,6 @@ export class FindNearbyPharmaciesUseCase {
     ) {
       throw new BadRequestException('Coordenadas inválidas');
     }
-    void this.gateway.findNearby(jid, latitude, longitude, radiusKm);
+    await this.gateway.findNearby(jid, latitude, longitude, radiusKm);
   }
 }

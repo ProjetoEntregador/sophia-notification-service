@@ -17,6 +17,7 @@ const FILTER_TTL_MS = 5 * 60 * 1000;
 
 @Injectable()
 export class FindNearbyPharmaciesHandler extends MessageHandlerInterface {
+  readonly flowName = PHARMACY_LOCATION_FLOW;
   private readonly logger = new Logger(FindNearbyPharmaciesHandler.name);
   private readonly pendingFilters = new Map<string, PendingFilter>();
 

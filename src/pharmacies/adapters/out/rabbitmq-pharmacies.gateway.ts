@@ -27,6 +27,7 @@ export class RabbitMqPharmaciesGateway extends PharmaciesGateway {
       this.logger.error(
         `Falha ao publicar pedido de farmácias para ${jid}: ${(err as Error).message}`,
       );
+      throw err;
     }
   }
 }
