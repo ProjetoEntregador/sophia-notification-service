@@ -1,4 +1,5 @@
-export { SocketProvider } from './socket-provider.interface.js';
-export { QrCodePresenter } from './qr-code-presenter.interface.js';
-export { MessageHandler } from './message-handler.interface.js';
-export { MessageSender } from './message-sender.interface.js';
+export { SocketProviderInterface } from './socket-provider.interface';
+export { QrCodePresenterInterface } from './qr-code-presenter.interface';
+export { MessageHandlerInterface } from './message-handler.interface';
+export { MessageHandlerRegistryInterface } from './message-handler-registry.interface';
+export { MessageRouterInterface } from './message-router.interface';

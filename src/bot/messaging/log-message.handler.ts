@@ -1,12 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { WAMessage } from 'baileys';
-import { MessageHandler } from '../interfaces/index.js';
+import { MessageHandlerInterface } from '../interfaces/index';
 
 @Injectable()
-export class LogMessageHandler extends MessageHandler {
+export class LogMessageHandler extends MessageHandlerInterface {
   private readonly logger = new Logger(LogMessageHandler.name);
 
-  async handle(_message: WAMessage, jid: string, text: string): Promise<void> {
+  canHandle(): boolean {
+    return true;
+  }
+
+  async handle(jid: string, text: string): Promise<void> {
     this.logger.log(`Mensagem recebida de ${jid}: ${text}`);
   }
 }

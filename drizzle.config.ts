@@ -1,9 +1,11 @@
-export default {
-  schema: './src/db/schema.ts',
+import 'dotenv/config';
+import { defineConfig } from 'drizzle-kit';
+
+export default defineConfig({
   out: './drizzle',
-  driver: 'postgresql',
+  schema: './src/db/schema/index.ts',
+  dialect: 'postgresql',
   dbCredentials: {
-    connectionString:
-      process.env.DATABASE_URL || 'postgres://user:pass@localhost:5432/dbname',
+    url: process.env.NOTIFICATION_DATABASE_URL!,
   },
-};
+});

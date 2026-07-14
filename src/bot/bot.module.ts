@@ -1,42 +1,87 @@
-import { Module } from '@nestjs/common';
-import { BotController } from './bot.controller.js';
-import { BotService } from './bot.service.js';
-import { WhatsAppConnectionService } from './connection/whatsapp-connection.service.js';
-import { WhatsAppSessionService } from './connection/whatsapp-session.service.js';
-import { MessageService } from './messaging/message.service.js';
-import { QrCodeTerminalPresenter } from './presenters/qr-code-terminal.presenter.js';
-import { LogMessageHandler } from './messaging/log-message.handler.js';
+import { forwardRef, Module } from '@nestjs/common';
+import { BotController } from './bot.controller';
+import { BotService } from './bot.service';
+import { WhatsAppConnectionService } from './connection/whatsapp-connection.service';
+import { WhatsAppSessionService } from './connection/whatsapp-session.service';
+import { MessageService } from './messaging/message.service';
+import { QrCodeTerminalPresenter } from './presenters/qr-code-terminal.presenter';
 import {
-  MessageHandler,
-  MessageSender,
-  QrCodePresenter,
-  SocketProvider,
-} from './interfaces/index.js';
+  MessageHandlerRegistryInterface,
+  MessageRouterInterface,
+  QrCodePresenterInterface,
+  SocketProviderInterface,
+} from './interfaces/index';
+import { RemindersModule } from '@/reminders/reminders.module';
+import { TreatmentsModule } from '@/treatments/treatments.module';
+import { MedicationsModule } from '@/medications/medications.module';
+import { UsersModule } from '@/users/users.module';
+import { PharmaciesModule } from '@/pharmacies/pharmacies.module';
+import { MessageRouter } from './messaging/message-router.service';
+import { StaticMessageHandlerRegistry } from './messaging/static-message-handler-registry';
+import { ConversationStateService } from './messaging/state/conversation-state.service';
+import { AiOrchestratorHandler } from './ai/ai-orchestrator.handler';
+import { ChatHistoryRepository } from './ai/domain/chat-history.repository.port';
+import { DrizzleChatHistoryRepository } from './ai/adapters/out/drizzle-chat-history.repository';
+import { AiToolsRegistry } from './ai/ai-tools.registry';
+import { LocalAiService } from './ai/local-ai.service';
+import { LocalTranscriptionService } from './ai/local-transcription.service';
+import {
+  AiServiceInterface,
+  TranscriptionServiceInterface,
+} from './ai/interfaces/index';
+import { MessageSender } from '@/shared/ports/message-sender.port';
+import { RabbitMQService } from '@/infra/messaging/rabbitmq.service';
 
 @Module({
+  imports: [
+    forwardRef(() => RemindersModule),
+    forwardRef(() => TreatmentsModule),
+    MedicationsModule,
+    forwardRef(() => UsersModule),
+    forwardRef(() => PharmaciesModule),
+  ],
   controllers: [BotController],
   providers: [
     WhatsAppConnectionService,
     WhatsAppSessionService,
+    BotService,
+    MessageService,
+    ConversationStateService,
+    RabbitMQService,
+
     {
-      provide: SocketProvider,
+      provide: ChatHistoryRepository,
+      useClass: DrizzleChatHistoryRepository,
+    },
+    AiToolsRegistry,
+    AiOrchestratorHandler,
+    LocalAiService,
+    { provide: AiServiceInterface, useExisting: LocalAiService },
+    LocalTranscriptionService,
+    {
+      provide: TranscriptionServiceInterface,
+      useExisting: LocalTranscriptionService,
+    },
+
+    StaticMessageHandlerRegistry,
+    {
+      provide: MessageHandlerRegistryInterface,
+      useExisting: StaticMessageHandlerRegistry,
+    },
+    MessageRouter,
+    { provide: MessageRouterInterface, useExisting: MessageRouter },
+    {
+      provide: SocketProviderInterface,
       useExisting: WhatsAppConnectionService,
     },
-    {
-      provide: QrCodePresenter,
-      useClass: QrCodeTerminalPresenter,
-    },
-    {
-      provide: MessageSender,
-      useClass: MessageService,
-    },
-    {
-      provide: MessageHandler,
-      useClass: LogMessageHandler,
-    },
-    MessageService,
-    BotService,
+    { provide: QrCodePresenterInterface, useClass: QrCodeTerminalPresenter },
+    { provide: MessageSender, useClass: MessageService },
   ],
-  exports: [WhatsAppSessionService, MessageSender],
+  exports: [
+    WhatsAppSessionService,
+    MessageSender,
+    ConversationStateService,
+    { provide: MessageRouterInterface, useExisting: MessageRouter },
+  ],
 })
 export class BotModule {}

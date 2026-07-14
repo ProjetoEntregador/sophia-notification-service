@@ -5,15 +5,10 @@ import makeWASocket, {
   WASocket,
 } from 'baileys';
 import pino from 'pino';
-import { SocketProvider } from '../interfaces/index.js';
-
-export interface WhatsAppConnectionOptions {
-  authFolder?: string;
-  connectTimeoutMs?: number;
-}
+import { SocketProviderInterface } from '../interfaces';
 
 @Injectable()
-export class WhatsAppConnectionService extends SocketProvider {
+export class WhatsAppConnectionService extends SocketProviderInterface {
   private readonly logger = new Logger(WhatsAppConnectionService.name);
   private readonly authFolder: string;
   private readonly connectTimeoutMs: number;

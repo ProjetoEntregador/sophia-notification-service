@@ -1,13 +1,17 @@
 import { Controller, Get } from '@nestjs/common';
-import { MessageSender } from './interfaces/index.js';
+import { SocketProviderInterface } from './interfaces/index';
 
 @Controller('bot')
 export class BotController {
-  constructor(private readonly messageSender: MessageSender) {}
+  constructor(private readonly socketProvider: SocketProviderInterface) {}
 
   @Get('status')
-  async getStatus(): Promise<{ status: string }> {
-    await this.messageSender.sendText('43545rwef', 'Bot is running!');
-    return { status: 'running' };
+  getStatus(): { connected: boolean } {
+    try {
+      this.socketProvider.getSocket();
+      return { connected: true };
+    } catch {
+      return { connected: false };
+    }
   }
 }

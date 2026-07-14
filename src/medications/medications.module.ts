@@ -1,0 +1,48 @@
+import { Module } from '@nestjs/common';
+import { UsersModule } from '../users/users.module';
+import { MedicationsRepository } from './domain/medications.repository.port';
+import { DrizzleMedicationsRepository } from './adapters/out/drizzle-medications.repository';
+import { ListMedicationsUseCase } from './application/use-cases/list-medications.usecase';
+import { RegisterMedicationUseCase } from './application/use-cases/register-medication.usecase';
+import { UpdateMedicationUseCase } from './application/use-cases/update-medication.usecase';
+import { DeleteMedicationUseCase } from './application/use-cases/delete-medication.usecase';
+import { FindMedicationByNameUseCase } from './application/use-cases/find-medication-by-name.usecase';
+import { GetMedicationStatusUseCase } from './application/use-cases/get-medication-status.usecase';
+import { UpdateMedicationQuantityUseCase } from './application/use-cases/update-medication-quantity.usecase';
+import { ListLowStockMedicationsUseCase } from './application/use-cases/list-low-stock.usecase';
+import { RegisterMedicationTool } from './adapters/in/ai-tools/register-medication.tool';
+import { UpdateMedicationQuantityTool } from './adapters/in/ai-tools/update-medication-quantity.tool';
+import { DeleteMedicationTool } from './adapters/in/ai-tools/delete-medication.tool';
+import { ListLowStockMedicationsTool } from './adapters/in/ai-tools/list-low-stock-medications.tool';
+
+@Module({
+  imports: [UsersModule],
+  providers: [
+    { provide: MedicationsRepository, useClass: DrizzleMedicationsRepository },
+    ListMedicationsUseCase,
+    RegisterMedicationUseCase,
+    UpdateMedicationUseCase,
+    DeleteMedicationUseCase,
+    FindMedicationByNameUseCase,
+    GetMedicationStatusUseCase,
+    UpdateMedicationQuantityUseCase,
+    ListLowStockMedicationsUseCase,
+    RegisterMedicationTool,
+    UpdateMedicationQuantityTool,
+    DeleteMedicationTool,
+    ListLowStockMedicationsTool,
+  ],
+  exports: [
+    MedicationsRepository,
+    RegisterMedicationUseCase,
+    FindMedicationByNameUseCase,
+    GetMedicationStatusUseCase,
+    ListMedicationsUseCase,
+    ListLowStockMedicationsUseCase,
+    RegisterMedicationTool,
+    UpdateMedicationQuantityTool,
+    DeleteMedicationTool,
+    ListLowStockMedicationsTool,
+  ],
+})
+export class MedicationsModule {}
